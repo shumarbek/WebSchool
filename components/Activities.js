@@ -188,7 +188,7 @@ export default function Activities() {
                           <div className={`rounded-2xl p-6 bg-gradient-to-br ${event.color} text-white`}>
                             <p className="text-sm opacity-80 mb-2">Kalendar</p>
                             <p className="text-3xl font-bold mb-1">{new Date(event.date.replace(', 2026', '-2026')).getDate()}</p>
-                            <p className="text-lg">{new Date(event.date.replace(', 2026', '-2026')).toLocaleDateString('uz-UZ', { month: 'long' })}</p>
+                            <p className="text-lg">{new Date(event.date.replace(', 2026', '-2026')).toLocaleDateString('uz-UZ', { month: 'long' }).replace('may', 'May').replace('aprel', 'Aprel').replace('iyun', 'Iyun').replace('iyul', 'Iyul').replace('avgust', 'Avgust').replace('sentabr', 'Sentabr').replace('oktabr', 'Oktabr').replace('noyabr', 'Noyabr').replace('dekabr', 'Dekabr').replace('yanvar', 'Yanvar').replace('fevral', 'Fevral')}</p>
                           </div>
                         </div>
                       </div>

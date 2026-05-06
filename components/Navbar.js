@@ -3,28 +3,32 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Moon, Sun, GraduationCap, BookOpen, Calendar, Award, Users, Clock, Map, Library, MessageSquare, Bell } from 'lucide-react'
+import { Menu, X, Moon, Sun, GraduationCap, BookOpen, Calendar, Award, Users, Clock, Map, Library, MessageSquare, Bell, ChevronDown, User, Building2 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
 
-const navItems = [
+const mainNavItems = [
   { name: 'Bosh Sahifa', href: '#home', icon: GraduationCap },
   { name: 'Yangiliklar', href: '#news', icon: BookOpen },
   { name: 'Yutuqlar', href: '#achievements', icon: Award },
   { name: 'Faoliyat', href: '#activities', icon: Calendar },
-  { name: 'Hodimlar', href: '#staff', icon: Users },
-  { name: 'Tarix', href: '#history', icon: Clock },
-  { name: 'Statistika', href: '#stats', icon: BarChart },
-  { name: 'Jadval', href: '#schedule', icon: Calendar },
-  { name: 'Kutubxona', href: '#library', icon: Library },
-  { name: 'Xarita', href: '#map', icon: Map },
-  { name: 'AI Yordamchi', href: '#ai', icon: MessageSquare },
 ]
 
-function BarChart(props) { return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg> }
+const oquvchiItems = [
+  { name: 'Dars Jadvali', href: '/schedule', icon: Calendar },
+  { name: 'Kutubxona', href: '/library', icon: Library },
+]
+
+const maktabItems = [
+  { name: 'Hodimlar', href: '/staff', icon: Users },
+  { name: 'Tarix', href: '#history', icon: Clock },
+  { name: 'Xarita', href: '#map', icon: Map },
+]
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [oquvchiOpen, setOquvchiOpen] = useState(false)
+  const [maktabOpen, setMaktabOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -57,13 +61,13 @@ export default function Navbar() {
                 <GraduationCap className="w-6 h-6 text-white" />
               </motion.div>
               <div>
-                <span className="text-xl font-bold gradient-text">Smart School</span>
+                <span className="text-xl font-bold gradient-text">DOSOV</span>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Zamonaviy Ta'lim</p>
               </div>
             </Link>
 
             <div className="hidden lg:flex items-center gap-1">
-              {navItems.slice(0, 6).map((item) => (
+              {mainNavItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -72,6 +76,46 @@ export default function Navbar() {
                   {item.name}
                 </Link>
               ))}
+
+              <div className="relative">
+                <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
+                  <User className="w-4 h-4" />
+                  O'quvchi
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  {oquvchiItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 rounded-lg"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative group">
+                <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
+                  <Building2 className="w-4 h-4" />
+                  Maktab
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  {maktabItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 rounded-lg"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -134,12 +178,54 @@ export default function Navbar() {
               </div>
               
               <div className="space-y-2">
-                {navItems.map((item, index) => (
+                {mainNavItems.map((item, index) => (
                   <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
+                  >
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/10 transition-colors"
+                    >
+                      <item.icon className="w-5 h-5 text-primary" />
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  </motion.div>
+                ))}
+
+                <div className="pt-4 pb-2">
+                  <p className="text-xs text-gray-500 px-3">O'quvchi</p>
+                </div>
+                {oquvchiItems.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (mainNavItems.length + index) * 0.05 }}
+                  >
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/10 transition-colors"
+                    >
+                      <item.icon className="w-5 h-5 text-primary" />
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  </motion.div>
+                ))}
+
+                <div className="pt-4 pb-2">
+                  <p className="text-xs text-gray-500 px-3">Maktab</p>
+                </div>
+                {maktabItems.map((item, index) => (
+                  <motion.div
+                    key={item.name}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (mainNavItems.length + oquvchiItems.length + index) * 0.05 }}
                   >
                     <Link
                       href={item.href}

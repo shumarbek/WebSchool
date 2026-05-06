@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Calendar, Eye, Heart, ArrowRight, Filter } from 'lucide-react'
+import { Search, Calendar, Eye, ArrowRight, ArrowUpRight } from 'lucide-react'
+import Link from 'next/link'
 
 const categories = ['Hammasi', 'Yangilik', "E'lon", 'Tadbirlar', 'Sport', 'Ilmiy']
 
@@ -14,7 +15,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800',
     date: '5 may, 2026',
     views: 1250,
-    likes: 89,
     excerpt: 'Matematika va fizika bo\'yicha xalqaro olimpiadada maktabimiz o\'quvchilari 3 ta oltin medal qo\'lga kiritdi...'
   },
   {
@@ -24,7 +24,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
     date: '3 may, 2026',
     views: 2340,
-    likes: 156,
     excerpt: 'Zamonaviy jihozlangan yangi sport zali o\'quvchilar uchun ochiq. Endi maktabimizda professional sport...'
   },
   {
@@ -34,7 +33,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1503676260728-1c00da094aec?w=800',
     date: '1 may, 2026',
     views: 3450,
-    likes: 234,
     excerpt: 'Qishki oraliq ta\'tili boshlandi. Barcha o\'quvchilarga dam olish va ma\'naviyatni mustahkamlashni tavsiya qilamiz...'
   },
   {
@@ -44,7 +42,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800',
     date: '28 aprel, 2026',
     views: 1890,
-    likes: 123,
     excerpt: 'Respublika robototexnika musobaqasida maktabimiz jamoasi birinchi o\'rinni egalladi...'
   },
   {
@@ -54,7 +51,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800',
     date: '25 aprel, 2026',
     views: 2100,
-    likes: 178,
     excerpt: 'Har yili bo\'lib o\'tadigan Open Day tadbirida maktabimizning imkoniyatlari...'
   },
   {
@@ -64,7 +60,6 @@ const news = [
     image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800',
     date: '22 aprel, 2026',
     views: 980,
-    likes: 67,
     excerpt: 'O\'quvchilarimiz ingliz tili bo\'yicha Cambridge sertifikati uchun imtihon topshirdi...'
   }
 ]
@@ -77,7 +72,7 @@ export default function News() {
     const categoryMatch = activeCategory === 'Hammasi' || item.category === activeCategory
     const searchMatch = item.title.toLowerCase().includes(searchQuery.toLowerCase())
     return categoryMatch && searchMatch
-  })
+  }).slice(0, 3)
 
   return (
     <section id="news" className="py-20 relative overflow-hidden">
@@ -91,21 +86,33 @@ export default function News() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="flex flex-col md:flex-row md:items-end md:justify-between mb-12"
         >
-          <h2 className="text-4xl font-bold mb-4">
-            So'nggi <span className="gradient-text">Yangiliklar</span>
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Maktabimizdagi eng so'nggi voqealar, tadbirlar va muvaffaqiyatlar
-          </p>
+          <div>
+            <h2 className="text-4xl font-bold mb-4">
+              So'nggi <span className="gradient-text">Yangiliklar</span>
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+              Maktabimizdagi eng so'nggi voqealar, tadbirlar va muvaffaqiyatlar
+            </p>
+          </div>
+          <Link href="/news" className="mt-4 md:mt-0">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-accent-purple text-white font-medium"
+            >
+              Barcha yangiliklar
+              <ArrowUpRight className="w-4 h-4" />
+            </motion.button>
+          </Link>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex flex-col md:flex-row gap-4 mb-12"
+          className="flex flex-col md:flex-row gap-4 mb-8"
         >
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -169,10 +176,6 @@ export default function News() {
                   <span className="flex items-center gap-1">
                     <Eye className="w-4 h-4" />
                     {item.views}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Heart className="w-4 h-4" />
-                    {item.likes}
                   </span>
                 </div>
 

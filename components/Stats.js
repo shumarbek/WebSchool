@@ -8,8 +8,7 @@ const stats = [
   { icon: Users, value: 5200, label: "O'quvchilar", suffix: '+' },
   { icon: GraduationCap, value: 156, label: "Hodimlar", suffix: '' },
   { icon: Award, value: 342, label: "Yutuqlar", suffix: '+' },
-  { icon: TrendingUp, value: 98, label: "% Muvaffaqiyat", suffix: '%' },
-  { icon: BookOpen, value: 45, label: "Fanlar", suffix: '' },
+  { icon: TrendingUp, value: 520, label: "Talabalar", suffix: '' },
   { icon: Building2, value: 28, label: "Xonalar", suffix: '' },
 ]
 

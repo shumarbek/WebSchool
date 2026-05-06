@@ -1,101 +1,25 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Star, Mail, Phone, Calendar, BookOpen, Award, Users } from 'lucide-react'
+import { Users, BookOpen, Award, GraduationCap, ArrowUpRight } from 'lucide-react'
+import Link from 'next/link'
 
-const teachers = [
-  {
-    id: 1,
-    name: 'Aziz Qodirov',
-    subject: 'Matematika',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400',
-    experience: 15,
-    rating: 4.9,
-    students: 280,
-    email: 'aziz.qodirov@school.uz',
-    phone: '+998 90 123-45-67',
-    schedule: 'Dush-Jum 08:00-14:00',
-    achievements: ['Xalqaro olimpiada murabbiyi', 'Yil eng yaxshi oqituvchi 2024']
-  },
-  {
-    id: 2,
-    name: 'Malika Yusupova',
-    subject: 'Fizika',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
-    experience: 12,
-    rating: 4.8,
-    students: 195,
-    email: 'malika.yusupova@school.uz',
-    phone: '+998 90 234-56-78',
-    schedule: 'Dush-Jum 09:00-15:00',
-    achievements: ['Fizika fan nomzodi', 'Respublika olimpiada g\'olibi']
-  },
-  {
-    id: 3,
-    name: 'Bobur Aliyev',
-    subject: 'Ingliz tili',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-    experience: 8,
-    rating: 4.9,
-    students: 320,
-    email: 'bobur.aliyev@school.uz',
-    phone: '+998 90 345-67-89',
-    schedule: 'Dush-Jum 10:00-16:00',
-    achievements: ['CELTA Sertifikati', 'Xalqaro til olimpiadasi murabbiyi']
-  },
-  {
-    id: 4,
-    name: 'Nilufar Ahmedova',
-    subject: 'Kimyo',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400',
-    experience: 10,
-    rating: 4.7,
-    students: 165,
-    email: 'nilufar.ahmedova@school.uz',
-    phone: '+998 90 456-78-90',
-    schedule: 'Dush-Jum 08:00-14:00',
-    achievements: ['Kimyo fan doktori', 'Ilmiy loyiha rahbari']
-  },
-  {
-    id: 5,
-    name: 'Jahongir Sobirov',
-    subject: 'Informatika',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    experience: 7,
-    rating: 4.9,
-    students: 210,
-    email: 'jahongir.sobirov@school.uz',
-    phone: '+998 90 567-89-01',
-    schedule: 'Dush-Jum 11:00-17:00',
-    achievements: ['Robototexnika ustasi', 'ACM dasturlash musobaqasi g\'olibi']
-  },
-  {
-    id: 6,
-    name: 'Gulnora Karimova',
-    subject: 'Tarix',
-    image: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400',
-    experience: 18,
-    rating: 4.8,
-    students: 150,
-    email: 'gulnora.karimova@school.uz',
-    phone: '+998 90 678-90-12',
-    schedule: 'Dush-Jum 09:00-15:00',
-    achievements: ['Tarix fan nomzodi', 'Yil eng yaxshi oqituvchi 2023']
-  }
+const staffCounts = [
+  { subject: 'Matematika', count: 8, icon: '📐', color: 'from-blue-500 to-cyan-500' },
+  { subject: 'Fizika', count: 6, icon: '⚛️', color: 'from-purple-500 to-pink-500' },
+  { subject: 'Ingliz tili', count: 7, icon: '🌍', color: 'from-amber-500 to-orange-500' },
+  { subject: 'Kimyo', count: 4, icon: '🧪', color: 'from-green-500 to-emerald-500' },
+  { subject: 'Informatika', count: 5, icon: '💻', color: 'from-indigo-500 to-purple-500' },
+  { subject: 'Tarix', count: 3, icon: '📜', color: 'from-rose-500 to-red-500' },
+  { subject: 'Adabiyot', count: 5, icon: '📚', color: 'from-teal-500 to-cyan-500' },
+  { subject: 'Biologiya', count: 3, icon: '🧬', color: 'from-lime-500 to-green-500' },
+  { subject: 'Geografiya', count: 2, icon: '🌍', color: 'from-sky-500 to-blue-500' },
+  { subject: 'Jismoniy tarbiya', count: 4, icon: '⚽', color: 'from-orange-500 to-amber-500' },
+  { subject: 'Boshqaruv', count: 12, icon: '🏢', color: 'from-gray-500 to-slate-500' },
 ]
 
-const subjects = ['Hammasi', 'Matematika', 'Fizika', 'Ingliz tili', 'Kimyo', 'Informatika', 'Tarix']
-
 export default function Staff() {
-  const [activeSubject, setActiveSubject] = useState('Hammasi')
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const filtered = teachers.filter(t => {
-    const subjectMatch = activeSubject === 'Hammasi' || t.subject === activeSubject
-    const searchMatch = t.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return subjectMatch && searchMatch
-  })
+  const totalTeachers = staffCounts.reduce((acc, curr) => acc + curr.count, 0)
 
   return (
     <section id="staff" className="py-20 bg-gray-50 dark:bg-dark-100 relative overflow-hidden">
@@ -109,114 +33,84 @@ export default function Staff() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="flex flex-col md:flex-row md:items-end md:justify-between mb-12"
         >
-          <h2 className="text-4xl font-bold mb-4">
-            Professional <span className="gradient-text">Hodimlar</span>
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Tajribali va malakali o'qituvchilarimiz
-          </p>
+          <div>
+            <h2 className="text-4xl font-bold mb-4">
+              Professional <span className="gradient-text">Hodimlar</span>
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+              Maktabimizdagi tajribali va malakali o'qituvchilar va hodimlar
+            </p>
+          </div>
+          <Link href="/staff" className="mt-4 md:mt-0">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-accent-purple text-white font-medium"
+            >
+              Barcha hodimlar
+              <ArrowUpRight className="w-4 h-4" />
+            </motion.button>
+          </Link>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex flex-col md:flex-row gap-4 mb-12"
+          className="glass rounded-3xl p-8 mb-8"
         >
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Hodimlarni qidirish..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl glass border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-            {subjects.map((subj) => (
-              <button
-                key={subj}
-                onClick={() => setActiveSubject(subj)}
-                className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                  activeSubject === subj
-                    ? 'bg-gradient-to-r from-primary to-accent-purple text-white'
-                    : 'glass hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-              >
-                {subj}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center mx-auto mb-3">
+                <GraduationCap className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-3xl font-bold gradient-text">{totalTeachers}</p>
+              <p className="text-sm text-gray-500">Jami o'qituvchilar</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-3">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-3xl font-bold gradient-text">12</p>
+              <p className="text-sm text-gray-500">Boshqaruv</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-3">
+                <Award className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-3xl font-bold gradient-text">15+</p>
+              <p className="text-sm text-gray-500">Yillik tajriba</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-3">
+                <BookOpen className="w-8 h-8 text-white" />
+              </div>
+              <p className="text-3xl font-bold gradient-text">10</p>
+              <p className="text-sm text-gray-500">Fanlar</p>
+            </div>
           </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((teacher, index) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {staffCounts.map((item, index) => (
             <motion.div
-              key={teacher.id}
+              key={item.subject}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
               whileHover={{ y: -5 }}
-              className="glass rounded-3xl overflow-hidden hover-lift"
+              className="glass rounded-2xl p-5 hover-lift"
             >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={teacher.image}
-                  alt={teacher.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-primary/90 text-white text-sm">
-                      {teacher.subject}
-                    </span>
-                    <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/90 text-white text-sm">
-                      <Star className="w-3 h-3 fill-white" />
-                      {teacher.rating}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl`}>
+                  {item.icon}
                 </div>
-              </div>
-
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-4">{teacher.name}</h3>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                    {teacher.experience} yillik tajriba
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <Users className="w-4 h-4 text-primary" />
-                    {teacher.students} o'quvchi
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{teacher.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Calendar className="w-4 h-4" />
-                      {teacher.schedule}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {teacher.achievements.map((achievement, i) => (
-                    <span key={i} className="px-2 py-1 bg-primary/10 rounded-lg text-xs text-primary">
-                      {achievement}
-                    </span>
-                  ))}
+                <div>
+                  <h3 className="font-semibold">{item.subject}</h3>
+                  <p className="text-sm text-gray-500">{item.count} ta hodim</p>
                 </div>
               </div>
             </motion.div>
