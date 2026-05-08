@@ -1,4 +1,6 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/library/page": "app/library/page.js",
   "/activities/page": "app/activities/page.js",
   "/achievements/page": "app/achievements/page.js",
   "/news/page": "app/news/page.js"
