@@ -11,18 +11,16 @@ const footerLinks = {
       { name: 'Bosh sahifa', href: '#home' },
       { name: 'Yangiliklar', href: '#news' },
       { name: 'Yutuqlar', href: '#achievements' },
-      { name: 'Hodimlar', href: '#staff' },
-      { name: 'Faoliyat', href: '#activities' },
-      { name: 'Tarix', href: '#history' },
+      { name: 'Faoliyat', href: '/activities' },
+      { name: 'Tarix', href: '/history' },
     ]
   },
   services: {
     title: 'Xizmatlar',
     links: [
-      { name: 'Dars jadvali', href: '#schedule' },
-      { name: 'Kutubxona', href: '#library' },
-      { name: 'Statistika', href: '#stats' },
-      { name: 'Interaktiv xarita', href: '#map' },
+      { name: 'Hodimlar', href: '/staff' },
+      { name: 'Dars jadvali', href: '/schedule' },
+      { name: 'Kutubxona', href: '/library' },
       { name: 'AI Yordamchi', href: '#ai' },
     ]
   },
@@ -31,7 +29,7 @@ const footerLinks = {
     links: [
       { name: 'Manzil: Toshkent, Yunusobod', href: '#' },
       { name: 'Telefon: +998 90 000-00-00', href: 'tel:+998900000000' },
-      { name: 'Email: info@smartschool.uz', href: 'mailto:info@smartschool.uz' },
+      { name: 'Email: info@dosov.uz', href: 'mailto:info@dosov.uz' },
       { name: 'Ish vaqti: 08:00-18:00', href: null },
     ]
   }
@@ -57,7 +55,7 @@ export default function Footer() {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white">Smart School</span>
+                <span className="text-xl font-bold text-white">DOSOV</span>
                 <p className="text-xs text-gray-400">Zamonaviy Ta'lim</p>
               </div>
             </Link>
@@ -75,7 +73,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-3 text-gray-400">
                 <Mail className="w-4 h-4" />
-                <span className="text-sm">info@smartschool.uz</span>
+                <span className="text-sm">info@dosov.uz</span>
               </div>
             </div>
           </motion.div>

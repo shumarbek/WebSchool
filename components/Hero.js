@@ -38,11 +38,11 @@ export default function Hero() {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="text-5xl lg:text-7xl font-bold leading-tight mb-6"
             >
-              <span className="text-gray-900 dark:text-white">Kelajak</span>
+              <span className="text-gray-900 dark:text-white">DOSOV</span>
               <br />
-              <span className="gradient-text">G'oyalar</span>
+              <span className="gradient-text">Maktabi</span>
               <br />
-              <span className="text-gray-900 dark:text-white">Maktabi</span>
+              <span className="text-gray-900 dark:text-white">Zamonaviy Ta'lim</span>
             </motion.h1>
 
             <motion.p

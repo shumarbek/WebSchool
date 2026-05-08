@@ -10,7 +10,7 @@ const mainNavItems = [
   { name: 'Bosh Sahifa', href: '#home', icon: GraduationCap },
   { name: 'Yangiliklar', href: '#news', icon: BookOpen },
   { name: 'Yutuqlar', href: '#achievements', icon: Award },
-  { name: 'Faoliyat', href: '#activities', icon: Calendar },
+  { name: 'Faoliyat', href: '/activities', icon: Calendar },
 ]
 
 const oquvchiItems = [
@@ -20,8 +20,8 @@ const oquvchiItems = [
 
 const maktabItems = [
   { name: 'Hodimlar', href: '/staff', icon: Users },
-  { name: 'Tarix', href: '#history', icon: Clock },
-  { name: 'Xarita', href: '#map', icon: Map },
+  { name: 'Tarix', href: '/history', icon: Clock },
+  { name: 'Xarita', href: '/map', icon: Map },
 ]
 
 export default function Navbar() {
