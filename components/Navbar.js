@@ -7,7 +7,7 @@ import { Menu, X, Moon, Sun, GraduationCap, BookOpen, Calendar, Award, Users, Cl
 import { useTheme } from './ThemeProvider'
 
 const mainNavItems = [
-  { name: 'Bosh Sahifa', href: '#home', icon: GraduationCap },
+  { name: 'Bosh Sahifa', href: '/', icon: GraduationCap },
   { name: 'Yangiliklar', href: '/news', icon: BookOpen },
   { name: 'Yutuqlar', href: '/achievements', icon: Award },
   { name: 'Faoliyat', href: '/activities', icon: Calendar },
@@ -77,20 +77,20 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              <div className="relative">
+              <div className="relative group">
                 <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-primary/5">
                   <User className="w-4 h-4" />
                   O'quvchi
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-48 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <div className="absolute top-full left-0 mt-2 w-56 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   {oquvchiItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 rounded-lg"
+                      className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-primary/10 rounded-lg transition-colors"
                     >
-                      <item.icon className="w-4 h-4" />
+                      <item.icon className="w-5 h-5 text-primary" />
                       {item.name}
                     </Link>
                   ))}
@@ -103,14 +103,14 @@ export default function Navbar() {
                   Maktab
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                <div className="absolute top-full left-0 mt-2 w-48 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <div className="absolute top-full left-0 mt-2 w-56 glass rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   {maktabItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-primary/10 rounded-lg"
+                      className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-primary/10 rounded-lg transition-colors"
                     >
-                      <item.icon className="w-4 h-4" />
+                      <item.icon className="w-5 h-5 text-primary" />
                       {item.name}
                     </Link>
                   ))}
