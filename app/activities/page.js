@@ -1,18 +1,18 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Calendar, Search, Filter, Play, Pause, ChevronLeft, ChevronRight, 
   Award, Users, Heart, MessageCircle, Share2, X, Image, Video as VideoIcon,
-  Star, MapPin, Clock, Trophy, Music, BookOpen, Sports, 
+  Star, MapPin, Clock, Trophy, Music, BookOpen, Volleyball, 
   HandHeart, GraduationCap, Globe, Camera
 } from 'lucide-react'
 
 const activityTypes = [
   { value: 'all', label: 'Hammasi', icon: Calendar },
   { value: 'olympiad', label: 'Olimpiadalar', icon: Trophy },
-  { value: 'sport', label: 'Sport', icon: Sports },
+  { value: 'sport', label: 'Sport', icon: Volleyball },
   { value: 'culture', label: 'Madaniyat', icon: Music },
   { value: 'volunteer', label: 'Hashar', icon: HandHeart },
   { value: 'academic', label: 'Akademik', icon: BookOpen },
@@ -172,7 +172,6 @@ export default function ActivitiesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   const filteredActivities = activities.filter(activity => {
     const typeMatch = activeType === 'all' || activity.type === activeType
