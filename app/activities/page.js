@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Calendar, Search, Filter, Play, Pause, ChevronLeft, ChevronRight, 
   Award, Users, Heart, MessageCircle, Share2, X, Image, Video as VideoIcon,
-  Star, MapPin, Clock, Trophy, Music, BookOpen, Volleyball, 
-  HandHeart, GraduationCap, Globe, Camera
+  Star, MapPin, Clock, Trophy, Music, Volleyball, HandHeart
 } from 'lucide-react'
 
 const activityTypes = [
@@ -15,9 +14,7 @@ const activityTypes = [
   { value: 'sport', label: 'Sport', icon: Volleyball },
   { value: 'culture', label: 'Madaniyat', icon: Music },
   { value: 'volunteer', label: 'Hashar', icon: HandHeart },
-  { value: 'academic', label: 'Akademik', icon: BookOpen },
   { value: 'celebration', label: 'Bayramlar', icon: Star },
-  { value: 'international', label: 'Xalqaro', icon: Globe },
 ]
 
 const activities = [
@@ -110,42 +107,6 @@ const activities = [
     achievements: [],
     likes: 234,
     comments: 41
-  },
-  {
-    id: 6,
-    title: 'Fan olimpiadalari',
-    type: 'academic',
-    date: '20-25 yanvar, 2026',
-    location: 'Respublika',
-    description: 'Matematika, fizika, kimyo va informatika bo\'yicha respublika olimpiadalarida ishtirok.',
-    images: [
-      'https://images.unsplash.com/photo-1503676260728-1c00da094aec?w=800',
-      'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800',
-      'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800',
-    ],
-    video: null,
-    participants: 24,
-    achievements: ['5 Oltin', '7 Kumush', '8 Bronze'],
-    likes: 312,
-    comments: 56
-  },
-  {
-    id: 7,
-    title: 'Xalqaro almashuv dasturi',
-    type: 'international',
-    date: '5-15 dekabr, 2025',
-    location: 'Germaniya',
-    description: 'Germaniya maktablari bilan almashuv dasturi. 10 o\'quvchi 10 kundan Germaniyada o\'qidi.',
-    images: [
-      'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800',
-      'https://images.unsplash.com/photo-1569025690938-a00729c9e1f9?w=800',
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-    ],
-    video: 'https://www.youtube.com/embed/example4',
-    participants: 10,
-    achievements: [],
-    likes: 198,
-    comments: 29
   },
   {
     id: 8,

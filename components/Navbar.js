@@ -9,7 +9,7 @@ import { useTheme } from './ThemeProvider'
 const mainNavItems = [
   { name: 'Bosh Sahifa', href: '#home', icon: GraduationCap },
   { name: 'Yangiliklar', href: '#news', icon: BookOpen },
-  { name: 'Yutuqlar', href: '#achievements', icon: Award },
+  { name: 'Yutuqlar', href: '/achievements', icon: Award },
   { name: 'Faoliyat', href: '/activities', icon: Calendar },
 ]
 
