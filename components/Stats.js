@@ -5,14 +5,14 @@ import { motion } from 'framer-motion'
 import { Users, GraduationCap, Award, TrendingUp, BookOpen, Building2 } from 'lucide-react'
 
 const stats = [
-  { icon: Users, value: 5200, label: "O'quvchilar", suffix: '+' },
-  { icon: GraduationCap, value: 156, label: "Hodimlar", suffix: '' },
-  { icon: Award, value: 342, label: "Yutuqlar", suffix: '+' },
-  { icon: TrendingUp, value: 520, label: "Talabalar", suffix: '' },
-  { icon: Building2, value: 28, label: "Xonalar", suffix: '' },
+  { icon: Users, value: 5200, label: "Yillik o'quvchilar", suffix: '+', isPercent: false },
+  { icon: GraduationCap, value: 156, label: "Hodimlar", suffix: '', isPercent: false },
+  { icon: Award, value: 342, label: "Yutuqlar", suffix: '+', isPercent: false },
+  { icon: TrendingUp, value: 89, label: "Kirish %", suffix: '%', isPercent: true },
+  { icon: Building2, value: 28, label: "Xonalar", suffix: '', isPercent: false },
 ]
 
-function Counter({ value, suffix }) {
+function Counter({ value, suffix, isPercent }) {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const [hasStarted, setHasStarted] = useState(false)
@@ -54,7 +54,7 @@ function Counter({ value, suffix }) {
     return () => clearInterval(timer)
   }, [value, hasStarted])
 
-  return <span ref={ref}>{count}{suffix}</span>
+  return <span ref={ref}>{isPercent ? count : count}{suffix}</span>
 }
 
 export default function Stats() {
@@ -95,7 +95,7 @@ export default function Stats() {
                 <stat.icon className="w-7 h-7 text-primary" />
               </div>
               <p className="text-3xl font-bold gradient-text mb-2">
-                <Counter value={stat.value} suffix={stat.suffix} />
+                <Counter value={stat.value} suffix={stat.suffix} isPercent={stat.isPercent} />
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
             </motion.div>

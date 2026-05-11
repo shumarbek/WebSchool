@@ -95,12 +95,12 @@ export default function Hero() {
               <div className="w-px h-12 bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
                 <p className="text-3xl font-bold gradient-text">5000+</p>
-                <p className="text-sm text-gray-500">O'quvchi</p>
+                <p className="text-sm text-gray-500">Yillik o'quvchi</p>
               </div>
               <div className="w-px h-12 bg-gray-200 dark:bg-gray-700" />
               <div className="text-center">
                 <p className="text-3xl font-bold gradient-text">150+</p>
-                <p className="text-sm text-gray-500">Hodim</p>
+                <p className="text-sm text-gray-500">Hodimlar</p>
               </div>
             </motion.div>
           </motion.div>
