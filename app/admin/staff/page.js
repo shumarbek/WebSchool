@@ -17,6 +17,7 @@ const positions = ['direktor', "direktor_o'rinbosari", 'nazoratchi', "bo'lim_bos
 const subjects = ['Biologiya', 'Fizika', 'Geografiya', 'Informatika', 'Ingliz tili', 'Jismoniy tarbiya', 'Kimyo', 'Matematika', 'Ona tili', 'Rus tili', 'Tarix'].sort((a, b) => a.localeCompare(b, 'uz'))
 const specialistTypes = ['psixolog', 'kutubxonachi', 'shifokor/hamshira', 'laborant', 'defektolog', 'logoped']
 const serviceTypes = ['qorovul', 'farrosh', "bog'bon", 'oshpaz', 'elektrik']
+const qualificationLevels = ['Oliy toifa', 'Birinchi toifa', 'Ikkinchi toifa', 'Mutaxassis']
 
 const emptyForm = {
   full_name: '',
@@ -34,7 +35,6 @@ const emptyForm = {
   awards: '',
   is_featured: false,
   is_active: true,
-  display_order: 0,
 }
 
 function roleMeta(item) {
@@ -71,11 +71,14 @@ export default function AdminStaffPage() {
     const { data, error } = await supabase
       .from('staff')
       .select('*')
-      .order('display_order', { ascending: true })
       .order('full_name', { ascending: true })
 
     if (error) console.error('Error loading staff:', error)
-    setItems(data || [])
+    setItems([...(data || [])].sort((a, b) => {
+      const aName = a.role === 'xizmat' ? a.work_type || '' : a.full_name || ''
+      const bName = b.role === 'xizmat' ? b.work_type || '' : b.full_name || ''
+      return aName.localeCompare(bName, 'uz')
+    }))
     setLoading(false)
   }
 
@@ -101,7 +104,6 @@ export default function AdminStaffPage() {
       awards: isService ? null : formData.awards,
       is_featured: isService ? false : formData.is_featured,
       is_active: formData.is_active,
-      display_order: parseInt(formData.display_order) || 0,
       updated_at: new Date().toISOString(),
     }
   }
@@ -151,7 +153,6 @@ export default function AdminStaffPage() {
       awards: item.awards || '',
       is_featured: item.is_featured ?? false,
       is_active: item.is_active ?? true,
-      display_order: item.display_order || 0,
     })
     setShowModal(true)
   }
@@ -243,7 +244,6 @@ export default function AdminStaffPage() {
                 {formData.role === 'xizmat' ? (
                   <div className="grid gap-4 md:grid-cols-2">
                     <Input label="Soni" type="number" value={formData.service_count} onChange={(value) => setFormData({ ...formData, service_count: value })} />
-                    <Input label="Tartib" type="number" value={formData.display_order} onChange={(value) => setFormData({ ...formData, display_order: value })} />
                   </div>
                 ) : (
                   <>
@@ -253,10 +253,9 @@ export default function AdminStaffPage() {
                       <Input label="Email" type="email" value={formData.email} onChange={(value) => setFormData({ ...formData, email: value })} />
                     </div>
                     <Input label="Rasm URL" type="url" value={formData.photo_url} onChange={(value) => setFormData({ ...formData, photo_url: value })} />
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <Input label="Tajriba (yil)" type="number" value={formData.experience_years} onChange={(value) => setFormData({ ...formData, experience_years: value })} />
-                      <Input label="Malaka" value={formData.qualification_level} onChange={(value) => setFormData({ ...formData, qualification_level: value })} />
-                      <Input label="Tartib" type="number" value={formData.display_order} onChange={(value) => setFormData({ ...formData, display_order: value })} />
+                      <Select label="Malaka" value={formData.qualification_level} options={qualificationLevels} onChange={(value) => setFormData({ ...formData, qualification_level: value })} />
                     </div>
                     <Textarea label="Bio" value={formData.bio} onChange={(value) => setFormData({ ...formData, bio: value })} />
                     <Textarea label="Mukofotlar" value={formData.awards} onChange={(value) => setFormData({ ...formData, awards: value })} />

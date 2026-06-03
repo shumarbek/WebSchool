@@ -76,7 +76,7 @@ export default function History() {
                   <div className="flex-1 w-full">
                     {item?.image_url ? (
                       <button type="button" onClick={() => setSelectedImage(item)} className="block w-full">
-                        <img src={item.image_url} alt={item.title} className={`w-full object-cover rounded-3xl ${item.is_director ? 'aspect-[3/4]' : 'aspect-video'}`} />
+                        <img src={item.image_url} alt={item.title} className="aspect-video w-full rounded-3xl object-cover" />
                       </button>
                     ) : (
                       <div className="w-full h-48 rounded-3xl bg-primary/10 flex items-center justify-center">

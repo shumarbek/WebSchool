@@ -136,7 +136,7 @@ export default function AdminSettingsPage() {
               ))}
             </div>
             {hero.background_type === 'image' && <input type="url" value={hero.background_url} onChange={(e) => setHero({ ...hero, background_url: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="Rasm URL" />}
-            {hero.background_type === 'video' && <input type="url" value={hero.video_url} onChange={(e) => setHero({ ...hero, video_url: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="Video URL" />}
+            {hero.background_type === 'video' && <input type="url" value={hero.video_url} onChange={(e) => setHero({ ...hero, video_url: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="YouTube, Vimeo yoki MP4/WebM video URL" />}
             <div className="grid gap-4 md:grid-cols-2">
               <input value={hero.cta_text} onChange={(e) => setHero({ ...hero, cta_text: e.target.value })} className="rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="CTA matni" />
               <input value={hero.cta_link} onChange={(e) => setHero({ ...hero, cta_link: e.target.value })} className="rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="CTA havolasi" />

@@ -6,6 +6,7 @@ import { Award, Trophy, ArrowUpRight, X, Calendar, Users } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
+import MediaLightbox from '@/components/MediaLightbox'
 
 const categoryLabels = {
   olimpiada: 'Olimpiada',
@@ -27,6 +28,7 @@ export default function Achievements() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [media, setMedia] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -69,9 +71,11 @@ export default function Achievements() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(loading ? Array.from({ length: 3 }) : items).map((item, index) => (
               <motion.div key={item?.id || index} onClick={() => item?.id && setSelected(item)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }} className="glass rounded-3xl overflow-hidden hover-lift cursor-pointer">
-                <div className="relative h-40 overflow-hidden bg-amber-500/10">
+                <div className="relative aspect-video overflow-hidden bg-amber-500/10">
                   {item?.image_url ? (
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: item.image_url, alt: item.title }) }} className="h-full w-full">
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    </button>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Award className="w-12 h-12 text-amber-500/50" />
@@ -98,8 +102,8 @@ export default function Achievements() {
         {selected && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)}>
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50">
-              <div className="relative h-56 bg-amber-500/10">
-                {selected.image_url ? <img src={selected.image_url} alt={selected.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><Award className="h-16 w-16 text-amber-500/50" /></div>}
+              <div className="relative aspect-video bg-amber-500/10">
+                {selected.image_url ? <button type="button" onClick={() => setMedia({ type: 'image', src: selected.image_url, alt: selected.title })} className="h-full w-full"><img src={selected.image_url} alt={selected.title} className="h-full w-full object-cover" /></button> : <div className="flex h-full items-center justify-center"><Award className="h-16 w-16 text-amber-500/50" /></div>}
                 <button onClick={() => setSelected(null)} className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white"><X className="h-5 w-5" /></button>
               </div>
               <div className="p-6 md:p-8">
@@ -132,6 +136,7 @@ export default function Achievements() {
           </motion.div>
         )}
       </AnimatePresence>
+      <MediaLightbox media={media} onClose={() => setMedia(null)} />
     </section>
   )
 }

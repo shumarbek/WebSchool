@@ -1,8 +1,4 @@
 {
-  "/history/page": "app/history/page.js",
-  "/schedule/page": "app/schedule/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/staff/page": "app/staff/page.js",
-  "/admin/schedule/page": "app/admin/schedule/page.js",
-  "/admin/staff/page": "app/admin/staff/page.js"
+  "/page": "app/page.js",
+  "/admin/activities/page": "app/admin/activities/page.js"
 }

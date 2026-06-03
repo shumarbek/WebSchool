@@ -14,9 +14,44 @@ const fallbackHero = {
   background_type: 'gradient',
 }
 
+function getVideoSource(url) {
+  if (!url) return null
+
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname.replace('www.', '')
+    const isDirect = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(parsed.pathname)
+
+    if (isDirect) return { type: 'direct', src: url }
+
+    if (host === 'youtu.be' || host.includes('youtube.com')) {
+      const id = host === 'youtu.be'
+        ? parsed.pathname.split('/').filter(Boolean)[0]
+        : parsed.searchParams.get('v') || parsed.pathname.split('/').filter(Boolean).pop()
+
+      if (id) {
+        return {
+          type: 'embed',
+          src: `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`,
+        }
+      }
+    }
+
+    if (host.includes('vimeo.com')) {
+      const id = parsed.pathname.split('/').filter(Boolean).pop()
+      if (id) return { type: 'embed', src: `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1` }
+    }
+
+    return { type: 'embed', src: url }
+  } catch {
+    return null
+  }
+}
+
 export default function Hero() {
   const [hero, setHero] = useState(fallbackHero)
   const supabase = createClient()
+  const videoSource = hero.background_type === 'video' ? getVideoSource(hero.video_url) : null
 
   useEffect(() => {
     async function loadHero() {
@@ -38,8 +73,16 @@ export default function Hero() {
     <section id="home" className="relative flex min-h-screen items-center overflow-hidden">
       {hero.background_type === 'image' && hero.background_url ? (
         <img src={hero.background_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      ) : hero.background_type === 'video' && hero.video_url ? (
-        <video src={hero.video_url} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline />
+      ) : hero.background_type === 'video' && videoSource?.type === 'direct' ? (
+        <video src={videoSource.src} className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline />
+      ) : hero.background_type === 'video' && videoSource?.type === 'embed' ? (
+        <iframe
+          src={videoSource.src}
+          title="Hero background video"
+          className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_32%),radial-gradient(circle_at_80%_30%,rgba(16,185,129,0.14),transparent_28%),linear-gradient(135deg,var(--bg-primary),var(--bg-secondary))]" />
       )}

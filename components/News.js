@@ -6,6 +6,7 @@ import { Calendar, FileText, Search, ArrowUpRight, X, UserRound, Clock } from 'l
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
+import MediaLightbox from '@/components/MediaLightbox'
 
 const categoryLabels = {
   elon: "E'lon",
@@ -19,6 +20,7 @@ export default function News() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [media, setMedia] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -86,9 +88,11 @@ export default function News() {
                 role="button"
                 tabIndex={0}
               >
-                <div className="relative h-48 overflow-hidden bg-primary/10">
+                <div className="relative aspect-video overflow-hidden bg-primary/10">
                   {item?.image_url ? (
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: item.image_url, alt: item.title }) }} className="h-full w-full">
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </button>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <FileText className="w-12 h-12 text-primary/40" />
@@ -131,9 +135,11 @@ export default function News() {
               onClick={(e) => e.stopPropagation()}
               className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-0 shadow-2xl dark:bg-dark-50"
             >
-              <div className="relative h-64 bg-primary/10">
+              <div className="relative aspect-video bg-primary/10">
                 {selected.image_url ? (
-                  <img src={selected.image_url} alt={selected.title} className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => setMedia({ type: 'image', src: selected.image_url, alt: selected.title })} className="h-full w-full">
+                    <img src={selected.image_url} alt={selected.title} className="h-full w-full object-cover" />
+                  </button>
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <FileText className="h-16 w-16 text-primary/40" />
@@ -160,6 +166,7 @@ export default function News() {
           </motion.div>
         )}
       </AnimatePresence>
+      <MediaLightbox media={media} onClose={() => setMedia(null)} />
     </section>
   )
 }

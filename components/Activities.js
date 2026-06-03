@@ -6,6 +6,7 @@ import { Calendar, MapPin, Users, ArrowUpRight, X, PlayCircle } from 'lucide-rea
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
+import MediaLightbox from '@/components/MediaLightbox'
 
 const categoryLabels = {
   olimpiada: 'Olimpiada',
@@ -19,6 +20,7 @@ export default function Activities() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [media, setMedia] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -61,9 +63,11 @@ export default function Activities() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(loading ? Array.from({ length: 3 }) : items).map((item, index) => (
               <motion.article key={item?.id || index} onClick={() => item?.id && setSelected(item)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.08 }} className="glass rounded-3xl overflow-hidden hover-lift cursor-pointer">
-                <div className="h-44 bg-primary/10">
+                <div className="aspect-video bg-primary/10">
                   {item?.image_url ? (
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: item.image_url, alt: item.title }) }} className="h-full w-full">
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    </button>
                   ) : (
                     <div className="h-full flex items-center justify-center">
                       <Calendar className="w-12 h-12 text-primary/40" />
@@ -91,9 +95,11 @@ export default function Activities() {
         {selected && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)}>
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50">
-              <div className="relative h-60 bg-primary/10">
+              <div className="relative aspect-video bg-primary/10">
                 {(selected.image_urls?.[0] || selected.image_url) ? (
-                  <img src={selected.image_urls?.[0] || selected.image_url} alt={selected.title} className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => setMedia({ type: 'image', src: selected.image_urls?.[0] || selected.image_url, alt: selected.title })} className="h-full w-full">
+                    <img src={selected.image_urls?.[0] || selected.image_url} alt={selected.title} className="h-full w-full object-cover" />
+                  </button>
                 ) : (
                   <div className="flex h-full items-center justify-center"><Calendar className="h-16 w-16 text-primary/40" /></div>
                 )}
@@ -110,16 +116,20 @@ export default function Activities() {
                 <p className="mt-6 whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">{selected.description || "Qo'shimcha ma'lumot kiritilmagan."}</p>
                 {Array.isArray(selected.image_urls) && selected.image_urls.length > 1 && (
                   <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
-                    {selected.image_urls.slice(1).map((url) => <img key={url} src={url} alt="" className="h-32 w-full rounded-2xl object-cover" />)}
+                    {selected.image_urls.slice(1).map((url) => (
+                      <button key={url} type="button" onClick={() => setMedia({ type: 'image', src: url, alt: selected.title })} className="aspect-video overflow-hidden rounded-2xl bg-primary/10">
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
                   </div>
                 )}
                 {Array.isArray(selected.video_urls) && selected.video_urls.length > 0 && (
                   <div className="mt-6 space-y-3">
                     {selected.video_urls.map((url) => (
-                      <a key={url} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-2xl bg-gray-50 p-3 text-primary dark:bg-dark-100">
+                      <button key={url} type="button" onClick={() => setMedia({ type: 'video', src: url, alt: selected.title })} className="flex w-full items-center gap-2 rounded-2xl bg-gray-50 p-3 text-left text-primary dark:bg-dark-100">
                         <PlayCircle className="h-5 w-5" />
                         Video
-                      </a>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -128,6 +138,7 @@ export default function Activities() {
           </motion.div>
         )}
       </AnimatePresence>
+      <MediaLightbox media={media} onClose={() => setMedia(null)} />
     </section>
   )
 }
