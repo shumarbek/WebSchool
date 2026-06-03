@@ -29,6 +29,8 @@ export default function AdminActivitiesPage() {
     category: 'madaniyat',
     date: '',
     image_url: '',
+    image_urls: '',
+    video_urls: '',
     location: '',
     participants_count: '',
     is_published: true,
@@ -57,9 +59,19 @@ export default function AdminActivitiesPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const today = new Date().toISOString().slice(0, 10)
+    if (formData.date && formData.date > today) {
+      alert('Faoliyat sanasi kelajakda bo\'lishi mumkin emas')
+      return
+    }
+    const imageUrls = parseUrls(formData.image_urls || formData.image_url)
+    const videoUrls = parseUrls(formData.video_urls)
     try {
       const submitData = {
         ...formData,
+        image_urls: imageUrls,
+        video_urls: videoUrls,
+        image_url: imageUrls[0] || '',
         participants_count: formData.participants_count ? parseInt(formData.participants_count) : null,
         date: formData.date || null,
         updated_at: new Date().toISOString(),
@@ -109,6 +121,8 @@ export default function AdminActivitiesPage() {
       category: 'madaniyat',
       date: '',
       image_url: '',
+      image_urls: '',
+      video_urls: '',
       location: '',
       participants_count: '',
       is_published: true,
@@ -123,6 +137,8 @@ export default function AdminActivitiesPage() {
       category: item.category || 'madaniyat',
       date: item.date || '',
       image_url: item.image_url || '',
+      image_urls: Array.isArray(item.image_urls) ? item.image_urls.join('\n') : item.image_url || '',
+      video_urls: Array.isArray(item.video_urls) ? item.video_urls.join('\n') : '',
       location: item.location || '',
       participants_count: item.participants_count?.toString() || '',
       is_published: item.is_published ?? true,
@@ -317,6 +333,7 @@ export default function AdminActivitiesPage() {
                     <label className="block text-sm font-medium mb-1.5">Sana</label>
                     <input
                       type="date"
+                      max={new Date().toISOString().slice(0, 10)}
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
@@ -359,13 +376,24 @@ export default function AdminActivitiesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Rasm URL</label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  <label className="block text-sm font-medium mb-1.5">Rasm URLlari</label>
+                  <textarea
+                    rows={3}
+                    value={formData.image_urls}
+                    onChange={(e) => setFormData({ ...formData, image_urls: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    placeholder="https://..."
+                    placeholder="Har bir URL yangi qatorda"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Video URLlari</label>
+                  <textarea
+                    rows={3}
+                    value={formData.video_urls}
+                    onChange={(e) => setFormData({ ...formData, video_urls: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
+                    placeholder="Har bir URL yangi qatorda"
                   />
                 </div>
 
@@ -393,4 +421,11 @@ export default function AdminActivitiesPage() {
       </AnimatePresence>
     </div>
   )
+}
+
+function parseUrls(value) {
+  return value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
 }

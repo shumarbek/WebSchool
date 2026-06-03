@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { 
   Users, Calendar, Award, BookOpen, Clock, FileText, 
-  TrendingUp, Building2, ArrowUp, ArrowDown
+  TrendingUp, History
 } from 'lucide-react'
 
 const statsCards = [
@@ -15,6 +15,7 @@ const statsCards = [
   { name: 'Faoliyat', key: 'activities', icon: Calendar, color: 'from-green-500 to-emerald-500' },
   { name: 'Kutubxona', key: 'library', icon: BookOpen, color: 'from-indigo-500 to-purple-500' },
   { name: 'Jadval', key: 'schedule', icon: Clock, color: 'from-rose-500 to-red-500' },
+  { name: 'Tarix', key: 'history', icon: History, color: 'from-slate-500 to-gray-700' },
 ]
 
 export default function AdminDashboard() {
@@ -29,13 +30,14 @@ export default function AdminDashboard() {
 
   async function loadStats() {
     try {
-      const [staffRes, newsRes, achievementsRes, activitiesRes, libraryRes, scheduleRes] = await Promise.all([
+      const [staffRes, newsRes, achievementsRes, activitiesRes, libraryRes, scheduleRes, historyRes] = await Promise.all([
         supabase.from('staff').select('*', { count: 'exact', head: true }),
         supabase.from('news').select('*', { count: 'exact', head: true }),
         supabase.from('achievements').select('*', { count: 'exact', head: true }),
         supabase.from('activities').select('*', { count: 'exact', head: true }),
         supabase.from('library_books').select('*', { count: 'exact', head: true }),
         supabase.from('schedule').select('*', { count: 'exact', head: true }),
+        supabase.from('milestones').select('*', { count: 'exact', head: true }),
       ])
 
       setStats({
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
         activities: activitiesRes.count || 0,
         library: libraryRes.count || 0,
         schedule: scheduleRes.count || 0,
+        history: historyRes.count || 0,
       })
 
       const { data: newsData } = await supabase
@@ -74,7 +77,7 @@ export default function AdminDashboard() {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
         {statsCards.map((card, index) => (
           <motion.div
             key={card.key}

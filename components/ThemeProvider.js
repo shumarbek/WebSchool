@@ -14,10 +14,8 @@ export function useTheme() {
 
 export default function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('dark')
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme) {
       setTheme(savedTheme)
@@ -27,19 +25,13 @@ export default function ThemeProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.classList.remove('light', 'dark')
-      document.documentElement.classList.add(theme)
-      localStorage.setItem('theme', theme)
-    }
-  }, [theme, mounted])
+    document.documentElement.classList.remove('light', 'dark')
+    document.documentElement.classList.add(theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark')
-  }
-
-  if (!mounted) {
-    return <div className="dark min-h-screen bg-dark" />
   }
 
   return (

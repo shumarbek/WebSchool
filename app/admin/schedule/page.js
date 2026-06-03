@@ -1,420 +1,262 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { 
-  Plus, Search, Edit2, Trash2, X, Clock, BookOpen, Users, Building2
-} from 'lucide-react'
+import { Clock, Edit2, Plus, Search, Trash2, X } from 'lucide-react'
 
+const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 const grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-const turOptions = ['A', 'B']
-const daysLower = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma']
-const daysUpper = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const lessonNumbers = [1, 2, 3, 4, 5, 6]
-const subjects = ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'Ingliz tili', 'Informatika', 'Tarix', 'Geografiya', 'Adabiyot', 'Musiqa', 'Chizmachilik', 'Jismoniy tarbiya']
-const rooms = ['201', '202', '301', '302', '303', '304', '305', '401', '402', '403', '501', '502', 'Sport zali']
+const turs = ['A', 'B']
+const subjects = ['Matematika', 'Tarix', 'Ona tili', 'Ingliz tili', 'Rus tili', 'Fizika', 'Kimyo', 'Biologiya', 'Geografiya', 'Informatika', 'Jismoniy tarbiya'].sort((a, b) => a.localeCompare(b, 'uz'))
+const timeSlots = [
+  { start_time: '09:00', end_time: '09:45' },
+  { start_time: '09:50', end_time: '10:35' },
+  { start_time: '10:40', end_time: '11:25' },
+  { start_time: '11:30', end_time: '12:15' },
+  { start_time: '12:45', end_time: '13:30' },
+  { start_time: '13:35', end_time: '14:20' },
+]
+const emptyLesson = { subject: '', teacher_id: '', room: '' }
 
 export default function AdminSchedulePage() {
-  const [schedule, setSchedule] = useState([])
-  const [staff, setStaff] = useState([])
+  const [rows, setRows] = useState([])
+  const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filterGrade, setFilterGrade] = useState('all')
-  const [filterTur, setFilterTur] = useState('all')
-  const [filterDay, setFilterDay] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
-  const [formData, setFormData] = useState({
-    grade: 9,
-    tur: 'A',
-    day: 'Dushanba',
-    lesson_number: 1,
-    subject: '',
-    teacher_id: '',
-    room: '',
-    week_type: 'both',
-    is_active: true,
-  })
+  const [editingKey, setEditingKey] = useState(null)
+  const [formData, setFormData] = useState({ grade: 1, tur: 'A', day: 'Dushanba', lessons: [{ ...emptyLesson }] })
   const supabase = createClient()
 
   useEffect(() => {
-    loadSchedule()
-    loadStaff()
+    loadData()
   }, [])
 
-  async function loadSchedule() {
-    try {
-      const { data, error } = await supabase
-        .from('schedule')
-        .select('*, staff(full_name)')
-        .order(['grade', 'tur', 'day', 'lesson_number'])
-      
-      if (error) throw error
-      setSchedule(data || [])
-    } catch (error) {
-      console.error('Error loading schedule:', error)
-    } finally {
-      setLoading(false)
-    }
+  async function loadData() {
+    const [{ data: scheduleRows }, { data: staffRows }] = await Promise.all([
+      supabase.from('schedule').select('*, staff(full_name, subject)').order('grade').order('tur').order('day').order('lesson_number'),
+      supabase.from('staff').select('id, full_name, subject').eq('role', 'pedagog').eq('is_active', true).order('full_name'),
+    ])
+    setRows(scheduleRows || [])
+    setTeachers(staffRows || [])
+    setLoading(false)
   }
 
-  async function loadStaff() {
-    try {
-      const { data, error } = await supabase
-        .from('staff')
-        .select('id, full_name, subject')
-        .eq('role', 'teacher')
-        .eq('is_active', true)
-      
-      if (error) throw error
-      setStaff(data || [])
-    } catch (error) {
-      console.error('Error loading staff:', error)
-    }
+  const groups = useMemo(() => {
+    const map = new Map()
+    rows.forEach((row) => {
+      const key = `${row.grade}-${row.tur}-${row.day}`
+      if (!map.has(key)) map.set(key, { key, grade: row.grade, tur: row.tur, day: row.day, lessons: [] })
+      map.get(key).lessons.push(row)
+    })
+    return Array.from(map.values()).filter((group) => `${group.grade}-${group.tur} ${group.day}`.toLowerCase().includes(searchQuery.toLowerCase()))
+  }, [rows, searchQuery])
+
+  const availableDays = useMemo(() => {
+    const used = new Set(rows.filter((row) => row.grade === parseInt(formData.grade) && row.tur === formData.tur).map((row) => row.day))
+    if (editingKey) return days
+    return days.filter((day) => !used.has(day))
+  }, [editingKey, formData.grade, formData.tur, rows])
+
+  function resetForm() {
+    const firstDay = days.find((day) => !rows.some((row) => row.grade === 1 && row.tur === 'A' && row.day === day)) || days[0]
+    setFormData({ grade: 1, tur: 'A', day: firstDay, lessons: [{ ...emptyLesson }] })
+  }
+
+  function openCreate() {
+    setEditingKey(null)
+    resetForm()
+    setShowModal(true)
+  }
+
+  function openEdit(group) {
+    setEditingKey(group.key)
+    setFormData({
+      grade: group.grade,
+      tur: group.tur,
+      day: group.day,
+      lessons: group.lessons.sort((a, b) => a.lesson_number - b.lesson_number).map((lesson) => ({
+        subject: lesson.subject || '',
+        teacher_id: lesson.teacher_id || '',
+        room: lesson.room || '',
+      })),
+    })
+    setShowModal(true)
+  }
+
+  function updateLesson(index, key, value) {
+    setFormData((current) => ({
+      ...current,
+      lessons: current.lessons.map((lesson, idx) => idx === index ? { ...lesson, [key]: value } : lesson),
+    }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    try {
-      const submitData = {
-        ...formData,
-        teacher_id: formData.teacher_id || null,
-        updated_at: new Date().toISOString(),
-      }
+    const lessons = formData.lessons.filter((lesson) => lesson.subject.trim())
+    if (lessons.length === 0) {
+      alert('Kamida bitta dars kiriting')
+      return
+    }
+    if (lessons.length > timeSlots.length) {
+      alert('Kuniga hozircha 6 ta dars qo\'shish mumkin')
+      return
+    }
 
-      if (editingItem) {
-        const { error } = await supabase
-          .from('schedule')
-          .update(submitData)
-          .eq('id', editingItem.id)
-        
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('schedule')
-          .insert({ ...submitData, created_at: new Date().toISOString() })
-        
-        if (error) throw error
-      }
-      
+    try {
+      const { error: deleteError } = await supabase
+        .from('schedule')
+        .delete()
+        .eq('grade', parseInt(formData.grade))
+        .eq('tur', formData.tur)
+        .eq('day', formData.day)
+
+      if (deleteError) throw deleteError
+
+      const payload = lessons.map((lesson, index) => ({
+        grade: parseInt(formData.grade),
+        tur: formData.tur,
+        day: formData.day,
+        lesson_number: index + 1,
+        subject: lesson.subject,
+        teacher_id: lesson.teacher_id || null,
+        room: lesson.room,
+        start_time: timeSlots[index]?.start_time || null,
+        end_time: timeSlots[index]?.end_time || null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }))
+
+      const { error } = await supabase.from('schedule').insert(payload)
+      if (error) throw error
+
       setShowModal(false)
-      setEditingItem(null)
+      setEditingKey(null)
       resetForm()
-      loadSchedule()
+      loadData()
     } catch (error) {
       console.error('Error saving schedule:', error)
       alert('Xatolik yuz berdi')
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Rostdan ham o\'chirishni xohlaymisiz?')) return
-    
-    try {
-      const { error } = await supabase.from('schedule').delete().eq('id', id)
-      if (error) throw error
-      loadSchedule()
-    } catch (error) {
-      console.error('Error deleting schedule:', error)
-    }
+  async function handleDelete(group) {
+    if (!confirm("Bu kun jadvalini o'chirishni xohlaysizmi?")) return
+    const { error } = await supabase.from('schedule').delete().eq('grade', group.grade).eq('tur', group.tur).eq('day', group.day)
+    if (error) console.error('Error deleting schedule:', error)
+    loadData()
   }
-
-  function resetForm() {
-    setFormData({
-      grade: 9,
-      tur: 'A',
-      day: 'Dushanba',
-      lesson_number: 1,
-      subject: '',
-      teacher_id: '',
-      room: '',
-      week_type: 'both',
-      is_active: true,
-    })
-  }
-
-  function openEdit(item) {
-    setEditingItem(item)
-    setFormData({
-      grade: item.grade,
-      tur: item.tur,
-      day: item.day,
-      lesson_number: item.lesson_number,
-      subject: item.subject || '',
-      teacher_id: item.teacher_id || '',
-      room: item.room || '',
-      week_type: item.week_type || 'both',
-      is_active: item.is_active ?? true,
-    })
-    setShowModal(true)
-  }
-
-  const getAvailableDays = (grade) => grade >= 5 ? daysUpper : daysLower
-
-  const filteredSchedule = schedule.filter(item => {
-    const matchesGrade = filterGrade === 'all' || item.grade === parseInt(filterGrade)
-    const matchesTur = filterTur === 'all' || item.tur === filterTur
-    const matchesDay = filterDay === 'all' || item.day === filterDay
-    return matchesGrade && matchesTur && matchesDay
-  })
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            <span className="gradient-text">Dars jadvali</span>
-          </h1>
-          <p className="text-gray-500">Dars jadvalini boshqarish</p>
+          <h1 className="text-2xl font-bold md:text-3xl"><span className="gradient-text">Dars jadvali</span></h1>
+          <p className="text-gray-500">Kunlik jadvalni bir martada qo'shish va tahrirlash</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setEditingItem(null); setShowModal(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent-purple text-white font-medium hover:opacity-90"
-        >
-          <Plus className="w-5 h-5" />
-          Qo'shish
-        </button>
-      </motion.div>
+        <button onClick={openCreate} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent-purple px-4 py-2.5 font-medium text-white"><Plus className="h-5 w-5" />Kun qo'shish</button>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex flex-wrap gap-3"
-      >
-        <select
-          value={filterGrade}
-          onChange={(e) => setFilterGrade(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-        >
-          <option value="all">Barcha sinflar</option>
-          {grades.map(g => <option key={g} value={g}>{g}-sinf</option>)}
-        </select>
-        <select
-          value={filterTur}
-          onChange={(e) => setFilterTur(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-        >
-          <option value="all">Barcha tur</option>
-          {turOptions.map(t => <option key={t} value={t}>{t} tur</option>)}
-        </select>
-        <select
-          value={filterDay}
-          onChange={(e) => setFilterDay(e.target.value)}
-          className="px-4 py-2.5 rounded-xl bg-white dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-        >
-          <option value="all">Barcha kunlar</option>
-          {[...daysUpper].map(d => <option key={d} value={d}>{d}</option>)}
-        </select>
-      </motion.div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="Masalan: 7-A Dushanba" />
+      </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filteredSchedule.length === 0 ? (
-        <div className="text-center py-12">
-          <Clock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Jadval topilmadi</p>
-        </div>
+        <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+      ) : groups.length === 0 ? (
+        <div className="py-12 text-center"><Clock className="mx-auto mb-4 h-12 w-12 text-gray-300" /><p className="text-gray-500">Jadval topilmadi</p></div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="overflow-x-auto"
-        >
-          <table className="w-full min-w-[800px] glass rounded-2xl overflow-hidden">
-            <thead className="bg-gray-100 dark:bg-dark-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Sinf</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Kun</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Dars</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Fan</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Ustoz</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Xona</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Amallar</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredSchedule.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="px-4 py-3">
-                    <span className="font-medium">{item.grade}"{item.tur}"</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">{item.day}</td>
-                  <td className="px-4 py-3 text-sm">{item.lesson_number}-dars</td>
-                  <td className="px-4 py-3 text-sm">{item.subject}</td>
-                  <td className="px-4 py-3 text-sm">{item.staff?.full_name || '-'}</td>
-                  <td className="px-4 py-3 text-sm">{item.room || '-'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                      >
-                        <Edit2 className="w-4 h-4 text-gray-500" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 rounded-lg hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {groups.map((group) => (
+            <div key={group.key} className="glass rounded-2xl p-4">
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold">{group.grade}-{group.tur} sinf</h3>
+                  <p className="text-primary">{group.day}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => openEdit(group)} className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><Edit2 className="h-4 w-4 text-gray-500" /></button>
+                  <button onClick={() => handleDelete(group)} className="rounded-lg p-2 hover:bg-red-50"><Trash2 className="h-4 w-4 text-red-500" /></button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {group.lessons.sort((a, b) => a.lesson_number - b.lesson_number).map((lesson) => (
+                  <div key={lesson.id} className="rounded-xl bg-white/70 p-3 text-sm dark:bg-dark-50">
+                    <p className="font-medium">{lesson.lesson_number}. {lesson.subject}</p>
+                    <p className="text-gray-500">{lesson.start_time ? `${lesson.start_time.slice(0, 5)} - ${lesson.end_time?.slice(0, 5) || ''}` : 'Vaqt kiritilmagan'} | {lesson.staff?.full_name || 'Ustoz tanlanmagan'} | {lesson.room || 'Xona yoq'}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <AnimatePresence>
         {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-lg max-h-[90vh] overflow-y-auto glass rounded-2xl p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">
-                  {editingItem ? 'Darsni tahrirlash' : 'Yangi dars qo\'shish'}
-                </h2>
-                <button onClick={() => setShowModal(false)} className="p-2 rounded-lg hover:bg-gray-100">
-                  <X className="w-5 h-5" />
-                </button>
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)}>
+            <motion.div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-dark-50" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-bold">{editingKey ? 'Kun jadvalini tahrirlash' : "Kun jadvali qo'shish"}</h2>
+                <button onClick={() => setShowModal(false)} className="rounded-lg p-2 hover:bg-gray-100"><X className="h-5 w-5" /></button>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Sinf *</label>
-                    <select
-                      required
-                      value={formData.grade}
-                      onChange={(e) => {
-                        const grade = parseInt(e.target.value)
-                        setFormData({ 
-                          ...formData, 
-                          grade,
-                          day: grade >= 5 ? 'Dushanba' : 'Dushanba'
-                        })
-                      }}
-                      className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    >
-                      {grades.map(g => <option key={g} value={g}>{g}-sinf</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Tur *</label>
-                    <select
-                      required
-                      value={formData.tur}
-                      onChange={(e) => setFormData({ ...formData, tur: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    >
-                      {turOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Kun *</label>
-                    <select
-                      required
-                      value={formData.day}
-                      onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    >
-                      {getAvailableDays(formData.grade).map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Dars raqami *</label>
-                    <select
-                      required
-                      value={formData.lesson_number}
-                      onChange={(e) => setFormData({ ...formData, lesson_number: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    >
-                      {lessonNumbers.map(n => <option key={n} value={n}>{n}-dars</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Xona</label>
-                    <select
-                      value={formData.room}
-                      onChange={(e) => setFormData({ ...formData, room: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    >
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Select label="Sinf" value={formData.grade} options={grades} onChange={(value) => setFormData({ ...formData, grade: parseInt(value), day: '' })} disabled={!!editingKey} suffix="-sinf" />
+                  <Select label="Tur" value={formData.tur} options={turs} onChange={(value) => setFormData({ ...formData, tur: value, day: '' })} disabled={!!editingKey} />
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm font-medium">Kun</span>
+                    <select required value={formData.day} onChange={(e) => setFormData({ ...formData, day: e.target.value })} disabled={!!editingKey} className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none disabled:opacity-60 dark:border-gray-700 dark:bg-dark-100">
                       <option value="">Tanlang</option>
-                      {rooms.map(r => <option key={r} value={r}>{r}</option>)}
+                      {availableDays.map((day) => <option key={day} value={day}>{day}</option>)}
                     </select>
+                  </label>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Darslar</h3>
+                    <button type="button" disabled={formData.lessons.length >= timeSlots.length} onClick={() => setFormData({ ...formData, lessons: [...formData.lessons, { ...emptyLesson }] })} className="rounded-lg bg-primary/10 px-3 py-1.5 text-sm text-primary disabled:opacity-50">Dars qo'shish</button>
                   </div>
+                  {formData.lessons.map((lesson, index) => (
+                    <div key={index} className="grid gap-3 rounded-2xl bg-gray-50 p-3 dark:bg-dark-100 md:grid-cols-[100px_1fr_1fr_1fr_auto]">
+                      <div className="rounded-xl bg-white px-3 py-2 text-sm text-gray-500 dark:bg-dark-50">
+                        {index + 1}-dars<br />{timeSlots[index]?.start_time} - {timeSlots[index]?.end_time}
+                      </div>
+                      <select required value={lesson.subject} onChange={(e) => updateLesson(index, 'subject', e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 outline-none dark:border-gray-700 dark:bg-dark-50">
+                        <option value="">Fan</option>
+                        {subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
+                      </select>
+                      <select value={lesson.teacher_id} onChange={(e) => updateLesson(index, 'teacher_id', e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 outline-none dark:border-gray-700 dark:bg-dark-50">
+                        <option value="">Ustoz</option>
+                        {teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.full_name}</option>)}
+                      </select>
+                      <input value={lesson.room} onChange={(e) => updateLesson(index, 'room', e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 outline-none dark:border-gray-700 dark:bg-dark-50" placeholder="Xona" />
+                      <button type="button" onClick={() => setFormData({ ...formData, lessons: formData.lessons.filter((_, idx) => idx !== index) })} className="rounded-xl bg-red-50 px-3 py-2 text-red-500">O'chirish</button>
+                    </div>
+                  ))}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Fan *</label>
-                  <select
-                    required
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                  >
-                    <option value="">Tanlang</option>
-                    {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Ustoz</label>
-                  <select
-                    value={formData.teacher_id}
-                    onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                  >
-                    <option value="">Tanlang</option>
-                    {staff.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.subject})</option>)}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="is_active"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <label htmlFor="is_active" className="text-sm">Faol</label>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-accent-purple text-white font-medium hover:opacity-90"
-                >
-                  {editingItem ? 'Saqlash' : 'Qo\'shish'}
-                </button>
+                <button className="w-full rounded-xl bg-gradient-to-r from-primary to-accent-purple py-3 font-medium text-white">Saqlash</button>
               </form>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+function Select({ label, value, options, onChange, disabled = false, suffix = '' }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none disabled:opacity-60 dark:border-gray-700 dark:bg-dark-100">
+        {options.map((option) => <option key={option} value={option}>{option}{suffix}</option>)}
+      </select>
+    </label>
   )
 }

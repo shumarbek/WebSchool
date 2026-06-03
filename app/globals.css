@@ -35,10 +35,22 @@ html {
 }
 
 body {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: "Noto Sans", "Inter", "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, system-ui, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow-x: hidden;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: "Noto Sans", "Inter", "Segoe UI", "SF Pro Display", "Helvetica Neue", Arial, system-ui, sans-serif;
+  letter-spacing: 0;
 }
 
 .glass {

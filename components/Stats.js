@@ -1,103 +1,72 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Users, GraduationCap, Award, TrendingUp, BookOpen, Building2 } from 'lucide-react'
+import { Award, Building2, GraduationCap, TrendingUp, Users } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
 
-const stats = [
-  { icon: Users, value: 5200, label: "Yillik o'quvchilar", suffix: '+', isPercent: false },
-  { icon: GraduationCap, value: 156, label: "Hodimlar", suffix: '', isPercent: false },
-  { icon: Award, value: 342, label: "Yutuqlar", suffix: '+', isPercent: false },
-  { icon: TrendingUp, value: 89, label: "Kirish %", suffix: '%', isPercent: true },
-  { icon: Building2, value: 28, label: "Xonalar", suffix: '', isPercent: false },
+const fields = [
+  { icon: Users, key: 'students_count', label: "Yillik o'quvchilar", suffix: '+' },
+  { icon: GraduationCap, key: 'staff_count', label: 'Hodimlar', suffix: '' },
+  { icon: Award, key: 'achievements_count', label: 'Yutuqlar', suffix: '+' },
+  { icon: TrendingUp, key: 'admission_percent', label: 'Kirish foizi', suffix: '%' },
+  { icon: Building2, key: 'rooms_count', label: 'Xonalar', suffix: '' },
 ]
 
-function Counter({ value, suffix, isPercent }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const [hasStarted, setHasStarted] = useState(false)
+export default function Stats() {
+  const [stats, setStats] = useState(null)
+  const supabase = createClient()
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasStarted) {
-          setHasStarted(true)
-        }
-      },
-      { threshold: 0.5 }
-    )
+    async function loadStats() {
+      const { data } = await supabase
+        .from('stats_settings')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
 
-    if (ref.current) {
-      observer.observe(ref.current)
+      const { count: staffCount } = await supabase
+        .from('staff')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .neq('role', 'xizmat')
+
+      setStats({ ...(data || {}), staff_count: staffCount || 0 })
     }
 
-    return () => observer.disconnect()
-  }, [hasStarted])
+    loadStats()
+  }, [])
 
-  useEffect(() => {
-    if (!hasStarted) return
-
-    let start = 0
-    const duration = 2000
-    const increment = value / (duration / 16)
-
-    const timer = setInterval(() => {
-      start += increment
-      if (start >= value) {
-        setCount(value)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(start))
-      }
-    }, 16)
-
-    return () => clearInterval(timer)
-  }, [value, hasStarted])
-
-  return <span ref={ref}>{isPercent ? count : count}{suffix}</span>
-}
-
-export default function Stats() {
   return (
     <section className="py-20 bg-gray-50 dark:bg-dark-100 relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent-purple/10 rounded-full blur-3xl" />
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
-            <span className="gradient-text">Maktab</span> Statistikasi
+            <span className="gradient-text">Maktab</span> statistikasi
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Bizning muvaffaqiyatlarimiz raqamlarda. Har bir o'quvchi uchun eng yaxshi natijaga erishamiz.
+            Bu raqamlar admin paneldagi statistika sozlamalaridan boshqariladi.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {fields.map((field, index) => (
             <motion.div
-              key={stat.label}
+              key={field.key}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="glass rounded-2xl p-6 text-center hover-lift"
+              transition={{ delay: index * 0.06 }}
+              className="glass rounded-2xl p-6 text-center"
             >
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center mx-auto mb-4">
-                <stat.icon className="w-7 h-7 text-primary" />
+                <field.icon className="w-7 h-7 text-primary" />
               </div>
               <p className="text-3xl font-bold gradient-text mb-2">
-                <Counter value={stat.value} suffix={stat.suffix} isPercent={stat.isPercent} />
+                {stats ? `${stats[field.key] || 0}${field.suffix}` : '...'}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{field.label}</p>
             </motion.div>
           ))}
         </div>

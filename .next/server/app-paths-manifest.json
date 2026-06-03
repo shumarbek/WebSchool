@@ -1,6 +1,8 @@
 {
-  "/page": "app/page.js",
+  "/history/page": "app/history/page.js",
+  "/schedule/page": "app/schedule/page.js",
   "/admin/page": "app/admin/page.js",
-  "/admin/login/page": "app/admin/login/page.js",
-  "/news/page": "app/news/page.js"
+  "/staff/page": "app/staff/page.js",
+  "/admin/schedule/page": "app/admin/schedule/page.js",
+  "/admin/staff/page": "app/admin/staff/page.js"
 }

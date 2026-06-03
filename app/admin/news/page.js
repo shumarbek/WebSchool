@@ -28,6 +28,8 @@ export default function AdminNewsPage() {
     category: 'elon',
     image_url: '',
     author: '',
+    event_start_at: '',
+    responsible_person: '',
     is_published: true,
     is_featured: false,
   })
@@ -55,10 +57,21 @@ export default function AdminNewsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (formData.category === 'maqola' && !formData.author.trim()) {
+      alert('Maqola uchun muallif majburiy')
+      return
+    }
+    if (formData.category === 'tadbir' && (!formData.event_start_at || !formData.responsible_person.trim())) {
+      alert('Tadbir uchun boshlanish vaqti va mas\'ul shaxs majburiy')
+      return
+    }
     try {
       const submitData = {
         ...formData,
-        published_at: formData.is_published ? new Date().toISOString() : null,
+        event_start_at: formData.event_start_at || null,
+        responsible_person: formData.category === 'tadbir' ? formData.responsible_person : null,
+        author: formData.category === 'maqola' ? formData.author : formData.author,
+        published_at: formData.is_published ? (editingItem?.published_at || new Date().toISOString()) : null,
         updated_at: new Date().toISOString(),
       }
 
@@ -106,6 +119,8 @@ export default function AdminNewsPage() {
       category: 'elon',
       image_url: '',
       author: '',
+      event_start_at: '',
+      responsible_person: '',
       is_published: true,
       is_featured: false,
     })
@@ -119,6 +134,8 @@ export default function AdminNewsPage() {
       category: item.category || 'elon',
       image_url: item.image_url || '',
       author: item.author || '',
+      event_start_at: item.event_start_at ? item.event_start_at.slice(0, 16) : '',
+      responsible_person: item.responsible_person || '',
       is_published: item.is_published ?? true,
       is_featured: item.is_featured ?? false,
     })
@@ -231,6 +248,9 @@ export default function AdminNewsPage() {
                 {item.author && (
                   <p className="text-sm text-gray-500 mb-3">{item.author}</p>
                 )}
+                <p className="text-xs text-gray-400 mb-3">
+                  {item.published_at ? new Date(item.published_at).toLocaleDateString('uz-UZ') : 'Chop etilmagan'}
+                </p>
                 <div className="flex gap-1">
                   <button
                     onClick={() => openEdit(item)}
@@ -325,16 +345,32 @@ export default function AdminNewsPage() {
                   />
                 </div>
 
+                {formData.category === 'maqola' && (
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Muallif</label>
                   <input
                     type="text"
+                    required
                     value={formData.author}
                     onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
                     placeholder="Muallif ismi"
                   />
                 </div>
+                )}
+
+                {formData.category === 'tadbir' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5">Boshlanish vaqti *</label>
+                      <input type="datetime-local" required value={formData.event_start_at} onChange={(e) => setFormData({ ...formData, event_start_at: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5">Mas'ul shaxs *</label>
+                      <input type="text" required value={formData.responsible_person} onChange={(e) => setFormData({ ...formData, responsible_person: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-4">
                   <label className="flex items-center gap-2">

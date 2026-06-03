@@ -1,236 +1,135 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Download, ChevronLeft, ChevronRight, Calendar, Clock, BookOpen, MapPin } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { BookOpen, Calendar, Clock, Mail, MapPin, Phone, UserRound, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
+import EmptyState from '@/components/EmptyState'
 
-const classes = ['9-A', '9-B', '10-A', '10-B', '11-A', '11-B']
+const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 
-const scheduleData = {
-  '9-A': [
-    { time: '08:00-08:45', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '08:55-09:40', subject: 'Fizika', teacher: 'Malika Yusupova', room: '305', color: 'from-purple-500 to-pink-500' },
-    { time: '10:00-10:45', subject: 'Ingliz tili', teacher: 'Bobur Aliyev', room: '102', color: 'from-amber-500 to-orange-500' },
-    { time: '11:05-11:50', subject: 'Tarix', teacher: 'Gulnora Karimova', room: '401', color: 'from-green-500 to-emerald-500' },
-    { time: '12:10-12:55', subject: 'Kimyo', teacher: 'Nilufar Ahmedova', room: '302', color: 'from-rose-500 to-red-500' },
-  ],
-  '9-B': [
-    { time: '08:00-08:45', subject: 'Fizika', teacher: 'Malika Yusupova', room: '305', color: 'from-purple-500 to-pink-500' },
-    { time: '08:55-09:40', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '10:00-10:45', subject: 'Informatika', teacher: 'Jahongir Sobirov', room: '501', color: 'from-indigo-500 to-purple-500' },
-    { time: '11:05-11:50', subject: 'Ingliz tili', teacher: 'Bobur Aliyev', room: '102', color: 'from-amber-500 to-orange-500' },
-    { time: '12:10-12:55', subject: 'Geografiya', teacher: 'Samir Valiyev', room: '403', color: 'from-teal-500 to-cyan-500' },
-  ],
-  '10-A': [
-    { time: '08:00-08:45', subject: 'Ingliz tili', teacher: 'Bobur Aliyev', room: '102', color: 'from-amber-500 to-orange-500' },
-    { time: '08:55-09:40', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '10:00-10:45', subject: 'Fizika', teacher: 'Malika Yusupova', room: '305', color: 'from-purple-500 to-pink-500' },
-    { time: '11:05-11:50', subject: 'Adabiyot', teacher: 'Dilshod Rahimov', room: '202', color: 'from-pink-500 to-rose-500' },
-    { time: '12:10-12:55', subject: 'Informatika', teacher: 'Jahongir Sobirov', room: '501', color: 'from-indigo-500 to-purple-500' },
-  ],
-  '10-B': [
-    { time: '08:00-08:45', subject: 'Kimyo', teacher: 'Nilufar Ahmedova', room: '302', color: 'from-rose-500 to-red-500' },
-    { time: '08:55-09:40', subject: 'Biologiya', teacher: 'Kamola Saidova', room: '304', color: 'from-green-500 to-emerald-500' },
-    { time: '10:00-10:45', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '11:05-11:50', subject: 'Tarix', teacher: 'Gulnora Karimova', room: '401', color: 'from-green-500 to-emerald-500' },
-    { time: '12:10-12:55', subject: 'Ingliz tili', teacher: 'Bobur Aliyev', room: '102', color: 'from-amber-500 to-orange-500' },
-  ],
-  '11-A': [
-    { time: '08:00-08:45', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '08:55-09:40', subject: 'Fizika', teacher: 'Malika Yusupova', room: '305', color: 'from-purple-500 to-pink-500' },
-    { time: '10:00-10:45', subject: 'Ingliz tili', teacher: 'Bobur Aliyev', room: '102', color: 'from-amber-500 to-orange-500' },
-    { time: '11:05-11:50', subject: 'Kimyo', teacher: 'Nilufar Ahmedova', room: '302', color: 'from-rose-500 to-red-500' },
-    { time: '12:10-12:55', subject: 'Adabiyot', teacher: 'Dilshod Rahimov', room: '202', color: 'from-pink-500 to-rose-500' },
-  ],
-  '11-B': [
-    { time: '08:00-08:45', subject: 'Informatika', teacher: 'Jahongir Sobirov', room: '501', color: 'from-indigo-500 to-purple-500' },
-    { time: '08:55-09:40', subject: 'Matematika', teacher: 'Aziz Qodirov', room: '201', color: 'from-blue-500 to-cyan-500' },
-    { time: '10:00-10:45', subject: 'Fizika', teacher: 'Malika Yusupova', room: '305', color: 'from-purple-500 to-pink-500' },
-    { time: '11:05-11:50', subject: 'Chizmachilik', teacher: 'Rustam Jurayev', room: '502', color: 'from-gray-500 to-slate-500' },
-    { time: '12:10-12:55', subject: 'Jismoniy tarbiya', teacher: 'Bekzod Qodirov', room: 'Sport zali', color: 'from-orange-500 to-amber-500' },
-  ]
+function timeRange(lesson) {
+  if (lesson.start_time && lesson.end_time) return `${lesson.start_time.slice(0, 5)} - ${lesson.end_time.slice(0, 5)}`
+  return `${lesson.lesson_number}-dars`
 }
 
-const today = new Date()
-const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const todayName = dayNames[today.getDay()]
-
-const todaySchedule = scheduleData['9-A'].slice(0, 3)
-
 export default function Schedule() {
-  const [selectedClass, setSelectedClass] = useState('9-A')
-  const [weekOffset, setWeekOffset] = useState(0)
+  const [schedule, setSchedule] = useState([])
+  const [selectedClass, setSelectedClass] = useState('')
+  const [selectedTeacher, setSelectedTeacher] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadSchedule() {
+      const { data } = await supabase
+        .from('schedule')
+        .select('*, staff(id, full_name, role, subject, position, photo_url, phone, email, bio, experience_years, qualification_level)')
+        .eq('is_active', true)
+        .order('grade', { ascending: true })
+        .order('tur', { ascending: true })
+        .order('lesson_number', { ascending: true })
+
+      const rows = data || []
+      setSchedule(rows)
+      if (rows.length > 0) setSelectedClass(`${rows[0].grade}-${rows[0].tur}`)
+      setLoading(false)
+    }
+
+    loadSchedule()
+  }, [])
+
+  const classes = useMemo(() => Array.from(new Set(schedule.map((item) => `${item.grade}-${item.tur}`))), [schedule])
+  const selectedLessons = useMemo(() => schedule.filter((item) => `${item.grade}-${item.tur}` === selectedClass), [schedule, selectedClass])
+  const grouped = useMemo(() => {
+    return days.reduce((acc, day) => {
+      acc[day] = selectedLessons.filter((lesson) => lesson.day === day).sort((a, b) => a.lesson_number - b.lesson_number)
+      return acc
+    }, {})
+  }, [selectedLessons])
 
   return (
     <section id="schedule" className="py-20 relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between mb-16"
-        >
-          <div>
-            <h2 className="text-4xl font-bold mb-4">
-              Dars <span className="gradient-text">Jadvali</span>
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
-              Har bir sinf uchun alohida jadval va real vaqt yangilanishlari
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-4 py-2 glass rounded-xl hover:bg-primary/10"
-            >
-              <Download className="w-4 h-4" />
-              PDF yuklash
-            </motion.button>
-          </div>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-12">
+          <h2 className="text-4xl font-bold mb-4">
+            Dars <span className="gradient-text">jadvali</span>
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
+            Haftalik jadval sinf bo'yicha ko'rsatiladi.
+          </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-3xl p-6 mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-primary" />
-              <span className="text-lg font-semibold">Bugungi darslar</span>
+        {!loading && schedule.length === 0 ? (
+          <EmptyState icon={Calendar} title="Hali dars jadvali mavjud emas" />
+        ) : (
+          <>
+            <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
+              {classes.map((cls) => (
+                <button key={cls} onClick={() => setSelectedClass(cls)} className={`whitespace-nowrap rounded-xl px-5 py-2 font-medium transition-all ${selectedClass === cls ? 'bg-gradient-to-r from-primary to-accent-purple text-white' : 'glass hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+                  {cls} sinf
+                </button>
+              ))}
             </div>
-            <span className="px-4 py-1 rounded-full bg-primary/20 text-primary font-medium">
-              {todayName}
-            </span>
-          </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            {todaySchedule.map((lesson, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={`rounded-2xl p-4 bg-gradient-to-br ${lesson.color} text-white`}
-              >
-                <div className="flex items-center gap-2 text-sm opacity-80 mb-2">
-                  <Clock className="w-4 h-4" />
-                  {lesson.time}
+            <div className="grid gap-5 xl:grid-cols-6">
+              {(loading ? days : days).map((day) => (
+                <div key={day} className="glass rounded-2xl p-4">
+                  <h3 className="mb-4 font-bold text-primary">{day}</h3>
+                  <div className="space-y-3">
+                    {loading ? (
+                      <div className="h-24 rounded-xl bg-primary/10" />
+                    ) : grouped[day]?.length ? (
+                      grouped[day].map((lesson) => (
+                        <div key={lesson.id} className="rounded-xl bg-white/70 p-4 shadow-sm dark:bg-dark-50">
+                          <p className="flex items-center gap-2 text-xs text-gray-500"><Clock className="h-3.5 w-3.5" />{timeRange(lesson)}</p>
+                          <p className="mt-2 text-xs text-gray-400">Fan nomi</p>
+                          <p className="font-semibold">{lesson.subject}</p>
+                          {lesson.staff?.full_name && (
+                            <div className="mt-3">
+                              <p className="text-xs text-gray-400">Biriktirilgan ustoz</p>
+                              <button type="button" onClick={() => setSelectedTeacher(lesson.staff)} className="mt-1 flex items-center gap-2 text-left text-sm text-primary">
+                                <UserRound className="h-4 w-4" />
+                                {lesson.staff.full_name}
+                              </button>
+                            </div>
+                          )}
+                          {lesson.room && <div className="mt-3"><p className="text-xs text-gray-400">Xona</p><p className="mt-1 flex items-center gap-2 text-xs text-gray-500"><MapPin className="h-3.5 w-3.5" />{lesson.room}</p></div>}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-400 dark:bg-dark-50">Jadval yo'q</p>
+                    )}
+                  </div>
                 </div>
-                <p className="text-lg font-bold mb-1">{lesson.subject}</p>
-                <p className="text-sm opacity-80">{lesson.teacher}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex items-center justify-between mb-6"
-        >
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {classes.map((cls) => (
-              <button
-                key={cls}
-                onClick={() => setSelectedClass(cls)}
-                className={`px-5 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-                  selectedClass === cls
-                    ? 'bg-gradient-to-r from-primary to-accent-purple text-white'
-                    : 'glass hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-              >
-                {cls} sinf
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setWeekOffset(weekOffset - 1)}
-              className="p-2 rounded-xl glass hover:bg-primary/10"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="px-4 py-2 glass rounded-xl text-sm">
-              {weekOffset === 0 ? 'Joriy hafta' : `${Math.abs(weekOffset)} hafta oldin`}
-            </span>
-            <button
-              onClick={() => setWeekOffset(weekOffset + 1)}
-              className="p-2 rounded-xl glass hover:bg-primary/10"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-3xl overflow-hidden"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-dark-50">
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Vaqt</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Fan</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">O'qituvchi</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Xona</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {scheduleData[selectedClass].map((lesson, index) => (
-                  <motion.tr
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-gray-50 dark:hover:bg-dark-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium">{lesson.time}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${lesson.color}`} />
-                        <span className="font-medium">{lesson.subject}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-gray-400" />
-                        <span>{lesson.teacher}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400" />
-                        <span>{lesson.room}</span>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
+
+      <AnimatePresence>
+        {selectedTeacher && (
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedTeacher(null)}>
+            <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl dark:bg-dark-50">
+              <button onClick={() => setSelectedTeacher(null)} className="ml-auto flex rounded-full bg-gray-100 p-2 dark:bg-dark-100"><X className="h-5 w-5" /></button>
+              <div className="mt-2 flex gap-5">
+                <div className="aspect-[3/4] w-32 overflow-hidden rounded-2xl bg-primary/10">
+                  {selectedTeacher.photo_url ? <img src={selectedTeacher.photo_url} alt={selectedTeacher.full_name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><UserRound className="h-10 w-10 text-primary/40" /></div>}
+                </div>
+                <div>
+                  <p className="text-sm text-primary">{selectedTeacher.subject ? `${selectedTeacher.subject} o'qituvchisi` : selectedTeacher.position}</p>
+                  <h3 className="text-2xl font-bold">{selectedTeacher.full_name}</h3>
+                  <p className="mt-2 text-sm text-gray-500">{selectedTeacher.experience_years || 0} yil tajriba</p>
+                  {selectedTeacher.phone && <p className="mt-4 flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" />{selectedTeacher.phone}</p>}
+                  {selectedTeacher.email && <p className="mt-2 flex items-center gap-2 text-sm"><Mail className="h-4 w-4 text-primary" />{selectedTeacher.email}</p>}
+                </div>
+              </div>
+              <p className="mt-5 whitespace-pre-line text-sm leading-6 text-gray-600 dark:text-gray-300">{selectedTeacher.bio || "Bio hali kiritilmagan."}</p>
+            </motion.article>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

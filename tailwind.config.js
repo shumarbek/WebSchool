@@ -37,8 +37,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-playfair)', 'serif'],
+        sans: ['Noto Sans', 'Inter', 'Segoe UI', 'SF Pro Text', 'Helvetica Neue', 'Arial', 'system-ui', 'sans-serif'],
+        display: ['Noto Sans', 'Inter', 'Segoe UI', 'SF Pro Display', 'Helvetica Neue', 'Arial', 'system-ui', 'sans-serif'],
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',

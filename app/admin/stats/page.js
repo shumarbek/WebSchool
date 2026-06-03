@@ -11,11 +11,11 @@ export default function AdminStatsPage() {
   const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
     students_count: '',
-    staff_count: '',
     achievements_count: '',
     admission_percent: '',
     rooms_count: '',
   })
+  const [staffCount, setStaffCount] = useState(0)
   const supabase = createClient()
 
   useEffect(() => {
@@ -34,12 +34,19 @@ export default function AdminStatsPage() {
       if (data) {
         setFormData({
           students_count: data.students_count?.toString() || '',
-          staff_count: data.staff_count?.toString() || '',
           achievements_count: data.achievements_count?.toString() || '',
           admission_percent: data.admission_percent?.toString() || '',
           rooms_count: data.rooms_count?.toString() || '',
         })
       }
+
+      const { count } = await supabase
+        .from('staff')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .neq('role', 'xizmat')
+
+      setStaffCount(count || 0)
     } catch (error) {
       console.error('Error loading stats settings:', error)
     } finally {
@@ -60,7 +67,6 @@ export default function AdminStatsPage() {
 
       const updateData = {
         students_count: parseInt(formData.students_count) || 0,
-        staff_count: parseInt(formData.staff_count) || 0,
         achievements_count: parseInt(formData.achievements_count) || 0,
         admission_percent: parseInt(formData.admission_percent) || 0,
         rooms_count: parseInt(formData.rooms_count) || 0,
@@ -102,7 +108,6 @@ export default function AdminStatsPage() {
 
   const statsFields = [
     { name: 'students_count', label: "Yillik o'quvchilar", icon: Users, placeholder: '5200' },
-    { name: 'staff_count', label: 'Hodimlar soni', icon: GraduationCap, placeholder: '156' },
     { name: 'achievements_count', label: 'Yutuqlar soni', icon: Award, placeholder: '342' },
     { name: 'admission_percent', label: "Kirish foizi (%)", icon: TrendingUp, placeholder: '89' },
     { name: 'rooms_count', label: 'Xonalar soni', icon: Building2, placeholder: '28' },
@@ -128,6 +133,13 @@ export default function AdminStatsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Hodimlar soni</label>
+              <div className="relative">
+                <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input value={staffCount} readOnly className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 outline-none opacity-75" />
+              </div>
+            </div>
             {statsFields.map((field) => (
               <div key={field.name}>
                 <label className="block text-sm font-medium mb-1.5">{field.label}</label>
@@ -185,7 +197,7 @@ export default function AdminStatsPage() {
         transition={{ delay: 0.2 }}
         className="grid md:grid-cols-3 gap-4"
       >
-        {statsFields.map((field, index) => {
+        {[{ name: 'staff_count', label: 'Hodimlar soni', icon: GraduationCap }, ...statsFields].map((field, index) => {
           const Icon = field.icon
           const colors = [
             'from-blue-500 to-cyan-500',
@@ -201,7 +213,7 @@ export default function AdminStatsPage() {
                 <Icon className="w-7 h-7 text-white" />
               </div>
               <p className="text-3xl font-bold gradient-text mb-1">
-                {formData[field.name] || '0'}
+                {field.name === 'staff_count' ? staffCount : formData[field.name] || '0'}
               </p>
               <p className="text-sm text-gray-500">{field.label}</p>
             </div>

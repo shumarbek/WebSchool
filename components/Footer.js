@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { GraduationCap, Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
+import { ArrowRight, Camera, GraduationCap, Mail, MapPin, Phone, PlayCircle, Send } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 
 const footerLinks = {
   platform: {
@@ -13,7 +15,7 @@ const footerLinks = {
       { name: 'Yutuqlar', href: '#achievements' },
       { name: 'Faoliyat', href: '/activities' },
       { name: 'Tarix', href: '/history' },
-    ]
+    ],
   },
   services: {
     title: 'Xizmatlar',
@@ -21,35 +23,40 @@ const footerLinks = {
       { name: 'Hodimlar', href: '/staff' },
       { name: 'Dars jadvali', href: '/schedule' },
       { name: 'Kutubxona', href: '/library' },
-      { name: 'AI Yordamchi', href: '#ai' },
-    ]
+    ],
   },
-  contact: {
-    title: 'Bog\'lanish',
-    links: [
-      { name: 'Manzil: Toshkent, Yunusobod', href: '#' },
-      { name: 'Telefon: +998 90 000-00-00', href: 'tel:+998900000000' },
-      { name: 'Email: info@dosov.uz', href: 'mailto:info@dosov.uz' },
-      { name: 'Ish vaqti: 08:00-18:00', href: null },
-    ]
-  }
 }
 
 export default function Footer() {
+  const [settings, setSettings] = useState({})
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadSettings() {
+      const { data } = await supabase.from('platform_settings').select('*').limit(1).maybeSingle()
+      setSettings(data || {})
+    }
+
+    loadSettings()
+  }, [])
+
+  const contacts = useMemo(() => [
+    settings.address && { icon: MapPin, text: settings.address },
+    settings.phone && { icon: Phone, text: settings.phone },
+    settings.email && { icon: Mail, text: settings.email },
+  ].filter(Boolean), [settings])
+
+  const socials = [
+    { icon: Send, href: settings.telegram_url, label: 'Telegram' },
+    { icon: Camera, href: settings.instagram_url, label: 'Instagram' },
+    { icon: PlayCircle, href: settings.youtube_url, label: 'YouTube' },
+  ].filter((item) => item.href)
+
   return (
     <footer className="bg-dark-50 dark:bg-dark relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <Link href="/" className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center">
                 <GraduationCap className="w-6 h-6 text-white" />
@@ -59,48 +66,36 @@ export default function Footer() {
                 <p className="text-xs text-gray-400">Zamonaviy Ta'lim</p>
               </div>
             </Link>
-            <p className="text-gray-400 mb-6">
-              Zamonaviy ta'lim platformasi - kelajak yetakchilarini tayyorlaymiz.
-            </p>
+            <p className="text-gray-400 mb-6">Zamonaviy ta'lim platformasi.</p>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-gray-400">
-                <MapPin className="w-4 h-4" />
-                <span className="text-sm">Toshkent, Yunusobod</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-400">
-                <Phone className="w-4 h-4" />
-                <span className="text-sm">+998 90 000-00-00</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-400">
-                <Mail className="w-4 h-4" />
-                <span className="text-sm">info@dosov.uz</span>
-              </div>
+              {contacts.length ? contacts.map((item) => (
+                <div key={item.text} className="flex items-center gap-3 text-gray-400">
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm">{item.text}</span>
+                </div>
+              )) : <p className="text-sm text-gray-400">Aloqa ma'lumotlari hali kiritilmagan.</p>}
             </div>
+            {socials.length > 0 && (
+              <div className="mt-5 flex gap-3">
+                {socials.map((item) => (
+                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="rounded-lg bg-white/10 p-2 text-gray-300 hover:text-primary" title={item.label}>
+                    <item.icon className="h-5 w-5" />
+                  </a>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {Object.entries(footerLinks).map(([key, section], index) => (
-            <motion.div
-              key={key}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: (index + 1) * 0.1 }}
-            >
+            <motion.div key={key} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index + 1) * 0.1 }}>
               <h3 className="text-white font-bold mb-4">{section.title}</h3>
               <ul className="space-y-3">
-                {section.links.map((link, i) => (
-                  <li key={i}>
-                    {link.href ? (
-                      <Link 
-                        href={link.href} 
-                        className="text-gray-400 hover:text-primary transition-colors flex items-center gap-2 group"
-                      >
-                        <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        {link.name}
-                      </Link>
-                    ) : (
-                      <span className="text-gray-400">{link.name}</span>
-                    )}
+                {section.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-gray-400 hover:text-primary transition-colors flex items-center gap-2 group">
+                      <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {link.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -108,19 +103,8 @@ export default function Footer() {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4"
-        >
-          <p className="text-gray-400 text-sm">
-            © 2026 Smart School. Barcha huquqlar himoyalangan.
-          </p>
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <a href="#" className="hover:text-primary transition-colors">Maxfiylik siyosati</a>
-            <a href="#" className="hover:text-primary transition-colors">Foydalanish shartlari</a>
-          </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-400 text-sm">© 2026 DOSOV. Barcha huquqlar himoyalangan.</p>
         </motion.div>
       </div>
     </footer>

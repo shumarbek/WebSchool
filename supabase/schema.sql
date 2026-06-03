@@ -1,68 +1,86 @@
--- DOSOV School Management System Database Schema
+-- DOSOV School Management System
+-- Fresh Supabase setup script. Run this once in Supabase SQL Editor.
 
--- Admin Users Table
-CREATE TABLE admin_users (
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   full_name TEXT,
-  role TEXT DEFAULT 'admin',
+  role TEXT NOT NULL DEFAULT 'admin' CHECK (role = 'admin'),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Hero Section Settings
-CREATE TABLE hero_settings (
+CREATE TABLE IF NOT EXISTS hero_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT DEFAULT 'DOSOV - Zamonaviy Ta\'lim',
-  subtitle TEXT DEFAULT 'Kelajagingizni biz bilan quring',
-  background_type TEXT DEFAULT 'gradient', -- 'gradient', 'image', 'video'
+  title TEXT DEFAULT 'DOSOV Maktabi',
+  subtitle TEXT DEFAULT 'Zamonaviy ta''lim va ochiq boshqaruv platformasi',
+  background_type TEXT DEFAULT 'gradient' CHECK (background_type IN ('gradient', 'image', 'video')),
   background_url TEXT,
   video_url TEXT,
-  stats_years TEXT DEFAULT '15+',
-  stats_students TEXT DEFAULT '5000+',
-  stats_staff TEXT DEFAULT '150+',
-  cta_text TEXT DEFAULT 'Ro\'yxatdan o\'tish',
-  cta_link TEXT DEFAULT '#contact',
+  cta_text TEXT DEFAULT 'Yangiliklar',
+  cta_link TEXT DEFAULT '#news',
   is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Statistics Settings
-CREATE TABLE stats_settings (
+CREATE TABLE IF NOT EXISTS platform_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  students_count INTEGER DEFAULT 5200,
-  staff_count INTEGER DEFAULT 156,
-  achievements_count INTEGER DEFAULT 342,
-  admission_percent INTEGER DEFAULT 89,
-  rooms_count INTEGER DEFAULT 28,
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  youtube_url TEXT,
+  instagram_url TEXT,
+  telegram_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Staff Table
-CREATE TABLE staff (
+CREATE TABLE IF NOT EXISTS stats_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  full_name TEXT NOT NULL,
-  role TEXT NOT NULL, -- 'director', 'deputy', 'teacher', 'staff'
+  students_count INTEGER DEFAULT 0,
+  achievements_count INTEGER DEFAULT 0,
+  admission_percent INTEGER DEFAULT 0,
+  rooms_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS staff (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT,
+  role TEXT NOT NULL CHECK (role IN ('mamuriyat', 'pedagog', 'mutaxassis', 'xizmat')),
+  position TEXT,
   subject TEXT,
+  work_type TEXT,
+  service_count INTEGER DEFAULT 1 CHECK (service_count >= 0),
+  experience_years INTEGER DEFAULT 0 CHECK (experience_years >= 0),
+  qualification_level TEXT,
   phone TEXT,
   email TEXT,
   photo_url TEXT,
   bio TEXT,
-  position TEXT, -- For leadership roles
+  awards TEXT,
+  is_featured BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
   display_order INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT staff_required_fields CHECK (
+    (role = 'xizmat' AND work_type IS NOT NULL)
+    OR (role <> 'xizmat' AND full_name IS NOT NULL)
+  )
 );
 
--- History/Milestones Table
-CREATE TABLE milestones (
+CREATE TABLE IF NOT EXISTS milestones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   year INTEGER NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
-  is_director BOOLEAN DEFAULT false, -- For director history
+  is_director BOOLEAN DEFAULT false,
   director_name TEXT,
   image_url TEXT,
   display_order INTEGER DEFAULT 0,
@@ -70,14 +88,15 @@ CREATE TABLE milestones (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- News Table
-CREATE TABLE news (
+CREATE TABLE IF NOT EXISTS news (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   content TEXT,
-  category TEXT NOT NULL, -- 'elon', 'maqola', 'ozgarish', 'tadbir'
+  category TEXT NOT NULL CHECK (category IN ('elon', 'maqola', 'ozgarish', 'tadbir')),
   image_url TEXT,
   author TEXT,
+  event_start_at TIMESTAMP WITH TIME ZONE,
+  responsible_person TEXT,
   is_published BOOLEAN DEFAULT true,
   is_featured BOOLEAN DEFAULT false,
   view_count INTEGER DEFAULT 0,
@@ -86,16 +105,16 @@ CREATE TABLE news (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Achievements Table
-CREATE TABLE achievements (
+CREATE TABLE IF NOT EXISTS achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
-  category TEXT NOT NULL, -- 'olimpiada', 'sport', 'ilmiy', 'sertifikat'
-  level TEXT, -- 'mintaqa', 'viloyat', 'respublika', 'xalqaro'
-  student_name TEXT,
-  student_photo_url TEXT,
-  teacher_name TEXT,
+  category TEXT NOT NULL CHECK (category IN ('olimpiada', 'sport', 'ilmiy', 'sertifikat')),
+  stage TEXT CHECK (stage IS NULL OR stage IN ('dostona', 'tuman', 'viloyat', 'respublika', 'osiya', 'jahon')),
+  certificate_type TEXT CHECK (certificate_type IS NULL OR certificate_type IN ('milliy', 'cefr', 'ielts', 'toefl', 'topik', 'a-level', 'sat')),
+  participants JSONB DEFAULT '[]'::jsonb,
+  teacher_ids UUID[] DEFAULT '{}',
+  teacher_names TEXT[] DEFAULT '{}',
   award_date DATE,
   image_url TEXT,
   is_published BOOLEAN DEFAULT true,
@@ -103,14 +122,15 @@ CREATE TABLE achievements (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Activities Table
-CREATE TABLE activities (
+CREATE TABLE IF NOT EXISTS activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
-  category TEXT NOT NULL, -- 'olimpiada', 'sport', 'madaniyat', 'hashar', 'bayram'
+  category TEXT NOT NULL CHECK (category IN ('olimpiada', 'sport', 'madaniyat', 'hashar', 'bayram')),
   date DATE,
   image_url TEXT,
+  image_urls TEXT[] DEFAULT '{}',
+  video_urls TEXT[] DEFAULT '{}',
   location TEXT,
   participants_count INTEGER,
   is_published BOOLEAN DEFAULT true,
@@ -118,48 +138,81 @@ CREATE TABLE activities (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Library Books Table
-CREATE TABLE library_books (
+CREATE TABLE IF NOT EXISTS library_books (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   author TEXT,
-  category TEXT NOT NULL, -- 'darslik', 'badiy', 'ichki'
-  grade INTEGER, -- For textbooks (1-11)
+  category TEXT NOT NULL CHECK (category IN ('darslik', 'badiy', 'ichki')),
+  grade INTEGER CHECK (grade IS NULL OR grade BETWEEN 1 AND 11),
   publisher TEXT,
   year INTEGER,
-  quantity INTEGER DEFAULT 1,
   cover_url TEXT,
+  view_url TEXT,
   description TEXT,
   is_published BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Schedule Table
-CREATE TABLE schedule (
+CREATE TABLE IF NOT EXISTS schedule (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  grade INTEGER NOT NULL, -- 1-11
-  tur TEXT NOT NULL, -- 'A' or 'B'
-  day TEXT NOT NULL, -- 'Dushanba', 'Seshanba', etc.
-  lesson_number INTEGER NOT NULL, -- 1-6
+  grade INTEGER NOT NULL CHECK (grade BETWEEN 1 AND 11),
+  tur TEXT NOT NULL CHECK (tur IN ('A', 'B')),
+  day TEXT NOT NULL CHECK (day IN ('Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba')),
+  lesson_number INTEGER NOT NULL CHECK (lesson_number BETWEEN 1 AND 8),
   subject TEXT NOT NULL,
-  teacher_id UUID REFERENCES staff(id),
+  teacher_id UUID REFERENCES staff(id) ON DELETE SET NULL,
   room TEXT,
-  week_type TEXT DEFAULT 'both', -- 'even', 'odd', 'both'
+  start_time TIME,
+  end_time TIME,
+  week_type TEXT DEFAULT 'both' CHECK (week_type IN ('even', 'odd', 'both')),
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (grade, tur, day, lesson_number)
 );
 
--- Insert default admin user (password: admin123)
--- Note: In production, use proper password hashing
-INSERT INTO admin_users (email, password_hash, full_name, role) 
-VALUES ('admin@dosov.uz', 'admin123', 'Admin', 'super_admin');
+CREATE INDEX IF NOT EXISTS idx_staff_active_order ON staff(is_active, role, display_order);
+CREATE INDEX IF NOT EXISTS idx_staff_featured ON staff(is_active, is_featured, display_order);
+CREATE INDEX IF NOT EXISTS idx_news_published_date ON news(is_published, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_achievements_published_date ON achievements(is_published, award_date DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_published_date ON activities(is_published, date DESC);
+CREATE INDEX IF NOT EXISTS idx_library_published_title ON library_books(is_published, title);
+CREATE INDEX IF NOT EXISTS idx_schedule_lookup ON schedule(is_active, grade, tur, day, lesson_number);
+CREATE INDEX IF NOT EXISTS idx_milestones_order ON milestones(display_order, year);
 
--- Insert default hero settings
-INSERT INTO hero_settings (title, subtitle) 
-VALUES ('DOSOV - Zamonaviy Ta\'lim', 'Kelajagingizni biz bilan quring');
+-- The current app uses a custom admin login table and the anon key from the browser.
+-- RLS is disabled so admin CRUD works after a fresh setup.
+ALTER TABLE admin_users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE hero_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE stats_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE staff DISABLE ROW LEVEL SECURITY;
+ALTER TABLE milestones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE news DISABLE ROW LEVEL SECURITY;
+ALTER TABLE achievements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE activities DISABLE ROW LEVEL SECURITY;
+ALTER TABLE library_books DISABLE ROW LEVEL SECURITY;
+ALTER TABLE schedule DISABLE ROW LEVEL SECURITY;
 
--- Insert default stats
-INSERT INTO stats_settings (students_count, staff_count, achievements_count, admission_percent, rooms_count)
-VALUES (5200, 156, 342, 89, 28);
+-- Initial records: only the admin account plus empty settings rows.
+-- No sample content is inserted into public content tables.
+INSERT INTO admin_users (email, password_hash, full_name, role)
+VALUES ('admin@dosov.uz', 'admin123', 'Admin', 'admin')
+ON CONFLICT (email) DO UPDATE SET
+  password_hash = EXCLUDED.password_hash,
+  full_name = EXCLUDED.full_name,
+  role = 'admin',
+  updated_at = NOW();
+
+INSERT INTO hero_settings (title, subtitle, cta_text, cta_link, is_active)
+SELECT 'DOSOV Maktabi', 'Zamonaviy ta''lim va ochiq boshqaruv platformasi', 'Yangiliklar', '#news', true
+WHERE NOT EXISTS (SELECT 1 FROM hero_settings);
+
+INSERT INTO platform_settings (phone, email, address, youtube_url, instagram_url, telegram_url)
+SELECT '', '', '', '', '', ''
+WHERE NOT EXISTS (SELECT 1 FROM platform_settings);
+
+INSERT INTO stats_settings (students_count, achievements_count, admission_percent, rooms_count)
+SELECT 0, 0, 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM stats_settings);

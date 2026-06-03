@@ -31,8 +31,8 @@ export default function AdminLibraryPage() {
     grade: '',
     publisher: '',
     year: '',
-    quantity: 1,
     cover_url: '',
+    view_url: '',
     description: '',
     is_published: true,
   })
@@ -63,9 +63,8 @@ export default function AdminLibraryPage() {
     try {
       const submitData = {
         ...formData,
-        grade: formData.grade ? parseInt(formData.grade) : null,
+        grade: formData.category === 'darslik' && formData.grade ? parseInt(formData.grade) : null,
         year: formData.year ? parseInt(formData.year) : null,
-        quantity: formData.quantity ? parseInt(formData.quantity) : 1,
         updated_at: new Date().toISOString(),
       }
 
@@ -114,8 +113,8 @@ export default function AdminLibraryPage() {
       grade: '',
       publisher: '',
       year: '',
-      quantity: 1,
       cover_url: '',
+      view_url: '',
       description: '',
       is_published: true,
     })
@@ -130,8 +129,8 @@ export default function AdminLibraryPage() {
       grade: item.grade?.toString() || '',
       publisher: item.publisher || '',
       year: item.year?.toString() || '',
-      quantity: item.quantity || 1,
       cover_url: item.cover_url || '',
+      view_url: item.view_url || '',
       description: item.description || '',
       is_published: item.is_published ?? true,
     })
@@ -247,9 +246,6 @@ export default function AdminLibraryPage() {
                 {item.author && (
                   <p className="text-sm text-gray-500 mb-1">{item.author}</p>
                 )}
-                {item.quantity && (
-                  <p className="text-xs text-gray-400">Soni: {item.quantity}</p>
-                )}
                 <div className="flex gap-1 mt-3">
                   <button
                     onClick={() => openEdit(item)}
@@ -325,7 +321,7 @@ export default function AdminLibraryPage() {
                     <select
                       required
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value, grade: e.target.value === 'darslik' ? formData.grade : '' })}
                       className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
                     >
                       {categories.map(cat => (
@@ -338,6 +334,7 @@ export default function AdminLibraryPage() {
                     <select
                       value={formData.grade}
                       onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                      disabled={formData.category !== 'darslik'}
                       className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
                     >
                       <option value="">Tanlang</option>
@@ -370,22 +367,22 @@ export default function AdminLibraryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Soni</label>
-                  <input
-                    type="number"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
-                    placeholder="1"
-                  />
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium mb-1.5">Muqova rasmi URL</label>
                   <input
                     type="url"
                     value={formData.cover_url}
                     onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Kitobni ko'rish URL</label>
+                  <input
+                    type="url"
+                    value={formData.view_url}
+                    onChange={(e) => setFormData({ ...formData, view_url: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
                     placeholder="https://..."
                   />
