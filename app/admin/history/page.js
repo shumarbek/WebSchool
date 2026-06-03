@@ -5,6 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { Calendar, Edit2, Plus, Search, Trash2, X } from 'lucide-react'
 
+const months = [
+  [1, 'Yanvar'],
+  [2, 'Fevral'],
+  [3, 'Mart'],
+  [4, 'Aprel'],
+  [5, 'May'],
+  [6, 'Iyun'],
+  [7, 'Iyul'],
+  [8, 'Avgust'],
+  [9, 'Sentabr'],
+  [10, 'Oktabr'],
+  [11, 'Noyabr'],
+  [12, 'Dekabr'],
+]
+
 export default function AdminHistoryPage() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,12 +29,13 @@ export default function AdminHistoryPage() {
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
     title: '',
     description: '',
     is_director: false,
     director_name: '',
     image_url: '',
-    display_order: 0,
+    image_urls: '',
   })
   const supabase = createClient()
 
@@ -32,8 +48,8 @@ export default function AdminHistoryPage() {
     const { data } = await supabase
       .from('milestones')
       .select('*')
-      .order('display_order', { ascending: true })
       .order('year', { ascending: true })
+      .order('month', { ascending: true })
     setItems(data || [])
     setLoading(false)
   }
@@ -41,12 +57,13 @@ export default function AdminHistoryPage() {
   function resetForm() {
     setFormData({
       year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
       title: '',
       description: '',
       is_director: false,
       director_name: '',
       image_url: '',
-      display_order: 0,
+      image_urls: '',
     })
   }
 
@@ -60,12 +77,13 @@ export default function AdminHistoryPage() {
     setEditingItem(item)
     setFormData({
       year: item.year || new Date().getFullYear(),
+      month: item.month || 1,
       title: item.title || '',
       description: item.description || '',
       is_director: item.is_director ?? false,
       director_name: item.director_name || '',
       image_url: item.image_url || '',
-      display_order: item.display_order || 0,
+      image_urls: Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls.join('\n') : item.image_url || '',
     })
     setShowModal(true)
   }
@@ -73,10 +91,13 @@ export default function AdminHistoryPage() {
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
+    const imageUrls = parseUrls(formData.image_urls || formData.image_url)
     const payload = {
       ...formData,
+      image_urls: imageUrls,
+      image_url: imageUrls[0] || '',
       year: Number(formData.year) || new Date().getFullYear(),
-      display_order: Number(formData.display_order) || 0,
+      month: Number(formData.month) || 1,
       updated_at: new Date().toISOString(),
     }
 
@@ -133,13 +154,13 @@ export default function AdminHistoryPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((item) => (
             <div key={item.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <div className="h-36 bg-blue-500/10">
+              <div className={`${item.is_director ? 'mx-auto aspect-[3/4] max-w-[180px]' : 'aspect-video'} bg-blue-500/10`}>
                 {item.image_url ? <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center"><Calendar className="w-10 h-10 text-blue-500/40" /></div>}
               </div>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="text-sm font-semibold text-blue-600">{item.year}</span>
+                    <span className="text-sm font-semibold text-blue-600">{formatDate(item)}</span>
                     <h3 className="font-bold text-slate-900 dark:text-white">{item.title}</h3>
                   </div>
                   <div className="flex gap-1">
@@ -171,8 +192,10 @@ export default function AdminHistoryPage() {
                     <input type="number" required value={formData.year} onChange={(e) => setFormData({ ...formData, year: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" />
                   </label>
                   <label className="block">
-                    <span className="block text-sm font-semibold mb-1.5">Tartib</span>
-                    <input type="number" value={formData.display_order} onChange={(e) => setFormData({ ...formData, display_order: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" />
+                    <span className="block text-sm font-semibold mb-1.5">Oy *</span>
+                    <select required value={formData.month} onChange={(e) => setFormData({ ...formData, month: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none">
+                      {months.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
                   </label>
                 </div>
                 <label className="block">
@@ -184,8 +207,8 @@ export default function AdminHistoryPage() {
                   <textarea rows={4} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none resize-none" />
                 </label>
                 <label className="block">
-                  <span className="block text-sm font-semibold mb-1.5">Rasm URL</span>
-                  <input type="url" value={formData.image_url} onChange={(e) => setFormData({ ...formData, image_url: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" />
+                  <span className="block text-sm font-semibold mb-1.5">Rasm URLlari</span>
+                  <textarea rows={3} value={formData.image_urls} onChange={(e) => setFormData({ ...formData, image_urls: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none resize-none" placeholder="Har bir rasm URL yangi qatorda" />
                 </label>
                 <label className="flex items-center gap-3">
                   <input type="checkbox" checked={formData.is_director} onChange={(e) => setFormData({ ...formData, is_director: e.target.checked })} className="w-4 h-4 rounded border-slate-300" />
@@ -208,4 +231,16 @@ export default function AdminHistoryPage() {
       </AnimatePresence>
     </div>
   )
+}
+
+function parseUrls(value) {
+  return value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function formatDate(item) {
+  const month = months.find(([value]) => value === Number(item.month))?.[1]
+  return month ? `${item.year} / ${month}` : item.year
 }

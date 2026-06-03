@@ -105,7 +105,7 @@ export default function Staff({ featuredOnly = false }) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
               {(loading ? Array.from({ length: 3 }) : staff.filter((item) => item.role !== 'xizmat')).map((item, index) => (
                 <motion.button key={item?.id || index} type="button" onClick={() => item?.id && setSelected(item)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.05 }} className="glass overflow-hidden rounded-2xl text-left hover-lift">
-                  <div className="aspect-video bg-primary/10">
+                  <div className="aspect-[3/4] bg-primary/10">
                     {item?.photo_url ? (
                       <span onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: item.photo_url, alt: item.full_name }) }} className="block h-full w-full">
                         <img src={item.photo_url} alt={item.full_name} className="h-full w-full object-cover" />
@@ -147,7 +147,7 @@ export default function Staff({ featuredOnly = false }) {
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50 md:grid-cols-[280px_1fr]">
               <div className="bg-primary/10 p-6">
                 <button onClick={() => setSelected(null)} className="mb-4 ml-auto flex rounded-full bg-black/50 p-2 text-white md:hidden"><X className="h-5 w-5" /></button>
-                <div className="aspect-video overflow-hidden rounded-2xl bg-white/40">
+                <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-white/40">
                   {selected.photo_url ? <button type="button" onClick={() => setMedia({ type: 'image', src: selected.photo_url, alt: selected.full_name })} className="h-full w-full"><img src={selected.photo_url} alt={selected.full_name} className="h-full w-full object-cover" /></button> : <div className="flex h-full items-center justify-center"><UserRound className="h-16 w-16 text-primary/35" /></div>}
                 </div>
                 <div className="mt-5 space-y-3 text-sm">

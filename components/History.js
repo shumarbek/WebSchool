@@ -2,14 +2,34 @@
 
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Building, Calendar, X } from 'lucide-react'
+import { Building, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
+import MediaLightbox from '@/components/MediaLightbox'
+
+const monthLabels = {
+  1: 'Yanvar',
+  2: 'Fevral',
+  3: 'Mart',
+  4: 'Aprel',
+  5: 'May',
+  6: 'Iyun',
+  7: 'Iyul',
+  8: 'Avgust',
+  9: 'Sentabr',
+  10: 'Oktabr',
+  11: 'Noyabr',
+  12: 'Dekabr',
+}
+
+function formatDate(item) {
+  return item?.month ? `${item.year} / ${monthLabels[item.month] || item.month}` : item?.year
+}
 
 export default function History() {
   const [timeline, setTimeline] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedImage, setSelectedImage] = useState(null)
+  const [media, setMedia] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -17,8 +37,8 @@ export default function History() {
       const { data } = await supabase
         .from('milestones')
         .select('*')
-        .order('display_order', { ascending: true })
         .order('year', { ascending: true })
+        .order('month', { ascending: true })
 
       setTimeline(data || [])
       setLoading(false)
@@ -59,7 +79,7 @@ export default function History() {
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center">
                           <Building className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-3xl font-bold gradient-text">{item?.year || '...'}</span>
+                        <span className="text-3xl font-bold gradient-text">{item ? formatDate(item) : '...'}</span>
                       </div>
                       <h3 className="text-xl font-bold mb-3">{item?.title || 'Yuklanmoqda...'}</h3>
                       <p className="text-gray-600 dark:text-gray-400">{item?.description || ''}</p>
@@ -74,10 +94,21 @@ export default function History() {
                     </div>
                   </div>
                   <div className="flex-1 w-full">
-                    {item?.image_url ? (
-                      <button type="button" onClick={() => setSelectedImage(item)} className="block w-full">
-                        <img src={item.image_url} alt={item.title} className="aspect-video w-full rounded-3xl object-cover" />
-                      </button>
+                    {(item?.image_urls?.[0] || item?.image_url) ? (
+                      <div className={item.is_director ? 'mx-auto w-full max-w-[260px]' : 'w-full'}>
+                        <button type="button" onClick={() => setMedia({ type: 'image', src: item.image_urls?.[0] || item.image_url, alt: item.title })} className="block w-full">
+                          <img src={item.image_urls?.[0] || item.image_url} alt={item.title} className={`w-full rounded-3xl object-cover ${item.is_director ? 'aspect-[3/4]' : 'aspect-video'}`} />
+                        </button>
+                        {Array.isArray(item.image_urls) && item.image_urls.length > 1 && (
+                          <div className={`mt-3 grid gap-2 ${item.is_director ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                            {item.image_urls.slice(1).map((url) => (
+                              <button key={url} type="button" onClick={() => setMedia({ type: 'image', src: url, alt: item.title })} className="aspect-video overflow-hidden rounded-xl bg-primary/10">
+                                <img src={url} alt="" className="h-full w-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="w-full h-48 rounded-3xl bg-primary/10 flex items-center justify-center">
                         <Calendar className="w-12 h-12 text-primary/40" />
@@ -90,16 +121,7 @@ export default function History() {
           </div>
         )}
       </div>
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedImage(null)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-3xl bg-white p-3 dark:bg-dark-50">
-              <button onClick={() => setSelectedImage(null)} className="absolute right-5 top-5 rounded-full bg-black/50 p-2 text-white"><X className="h-5 w-5" /></button>
-              <img src={selectedImage.image_url} alt={selectedImage.title} className="max-h-[82vh] w-full object-contain" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MediaLightbox media={media} onClose={() => setMedia(null)} />
     </section>
   )
 }

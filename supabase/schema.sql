@@ -78,12 +78,13 @@ CREATE TABLE IF NOT EXISTS staff (
 CREATE TABLE IF NOT EXISTS milestones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   year INTEGER NOT NULL,
+  month INTEGER DEFAULT 1 CHECK (month BETWEEN 1 AND 12),
   title TEXT NOT NULL,
   description TEXT,
   is_director BOOLEAN DEFAULT false,
   director_name TEXT,
   image_url TEXT,
-  display_order INTEGER DEFAULT 0,
+  image_urls TEXT[] DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -179,7 +180,7 @@ CREATE INDEX IF NOT EXISTS idx_achievements_published_date ON achievements(is_pu
 CREATE INDEX IF NOT EXISTS idx_activities_published_date ON activities(is_published, date DESC);
 CREATE INDEX IF NOT EXISTS idx_library_published_title ON library_books(is_published, title);
 CREATE INDEX IF NOT EXISTS idx_schedule_lookup ON schedule(is_active, grade, tur, day, lesson_number);
-CREATE INDEX IF NOT EXISTS idx_milestones_order ON milestones(display_order, year);
+CREATE INDEX IF NOT EXISTS idx_milestones_date ON milestones(year, month);
 
 -- The current app uses a custom admin login table and the anon key from the browser.
 -- RLS is disabled so admin CRUD works after a fresh setup.

@@ -1,4 +1,8 @@
 {
-  "/page": "app/page.js",
-  "/admin/activities/page": "app/admin/activities/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/history/page": "app/history/page.js",
+  "/library/page": "app/library/page.js",
+  "/achievements/page": "app/achievements/page.js",
+  "/admin/history/page": "app/admin/history/page.js",
+  "/admin/library/page": "app/admin/library/page.js"
 }

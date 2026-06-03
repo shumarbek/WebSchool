@@ -72,7 +72,7 @@ export default function Library() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {(loading ? Array.from({ length: 3 }) : filteredBooks).map((book, index) => (
               <motion.div key={book?.id || index} onClick={() => book?.id && setSelected(book)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.06 }} className="glass rounded-3xl overflow-hidden hover-lift cursor-pointer">
-                <div className="aspect-video bg-amber-500/10">
+                <div className="aspect-[3/4] bg-amber-500/10">
                   {book?.cover_url ? (
                     <button type="button" onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: book.cover_url, alt: book.title }) }} className="h-full w-full">
                       <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover" />
@@ -92,7 +92,7 @@ export default function Library() {
           <div className="space-y-4">
             {(loading ? Array.from({ length: 3 }) : filteredBooks).map((book, index) => (
               <motion.div key={book?.id || index} onClick={() => book?.id && setSelected(book)} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="glass rounded-2xl p-4 flex gap-4 cursor-pointer">
-                <div className="aspect-video w-28 rounded-xl bg-amber-500/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="aspect-[3/4] w-20 rounded-xl bg-amber-500/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {book?.cover_url ? <button type="button" onClick={(e) => { e.stopPropagation(); setMedia({ type: 'image', src: book.cover_url, alt: book.title }) }} className="h-full w-full"><img src={book.cover_url} alt={book.title} className="w-full h-full object-cover" /></button> : <BookOpen className="w-8 h-8 text-amber-500/50" />}
                 </div>
                 <div>
@@ -110,7 +110,7 @@ export default function Library() {
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)}>
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="grid max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50 md:grid-cols-[260px_1fr]">
               <div className="bg-amber-500/10 p-6">
-                <div className="aspect-video overflow-hidden rounded-2xl bg-white/50">
+                <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-white/50">
                   {selected.cover_url ? <button type="button" onClick={() => setMedia({ type: 'image', src: selected.cover_url, alt: selected.title })} className="h-full w-full"><img src={selected.cover_url} alt={selected.title} className="h-full w-full object-cover" /></button> : <div className="flex h-full items-center justify-center"><BookOpen className="h-14 w-14 text-amber-500/50" /></div>}
                 </div>
               </div>
