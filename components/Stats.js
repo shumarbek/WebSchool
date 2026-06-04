@@ -26,13 +26,17 @@ export default function Stats() {
         .limit(1)
         .maybeSingle()
 
-      const { count: staffCount } = await supabase
+      const { data: staffRows } = await supabase
         .from('staff')
-        .select('id', { count: 'exact', head: true })
+        .select('role, service_count')
         .eq('is_active', true)
-        .neq('role', 'xizmat')
 
-      setStats({ ...(data || {}), staff_count: staffCount || 0 })
+      const staffCount = (staffRows || []).reduce((total, item) => {
+        if (item.role === 'xizmat') return total + (Number(item.service_count) || 0)
+        return total + 1
+      }, 0)
+
+      setStats({ ...(data || {}), staff_count: staffCount })
     }
 
     loadStats()

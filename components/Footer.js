@@ -41,7 +41,7 @@ export default function Footer() {
   }, [])
 
   const contacts = useMemo(() => [
-    settings.address && { icon: MapPin, text: settings.address },
+    settings.address && { icon: MapPin, text: settings.address, href: settings.address_map_url || mapSearchUrl(settings.address) },
     settings.phone && { icon: Phone, text: settings.phone },
     settings.email && { icon: Mail, text: settings.email },
   ].filter(Boolean), [settings])
@@ -71,7 +71,11 @@ export default function Footer() {
               {contacts.length ? contacts.map((item) => (
                 <div key={item.text} className="flex items-center gap-3 text-gray-400">
                   <item.icon className="w-4 h-4" />
-                  <span className="text-sm">{item.text}</span>
+                  {item.href ? (
+                    <a href={item.href} target="_blank" rel="noreferrer" className="text-sm hover:text-primary">{item.text}</a>
+                  ) : (
+                    <span className="text-sm">{item.text}</span>
+                  )}
                 </div>
               )) : <p className="text-sm text-gray-400">Aloqa ma'lumotlari hali kiritilmagan.</p>}
             </div>
@@ -109,4 +113,9 @@ export default function Footer() {
       </div>
     </footer>
   )
+}
+
+function mapSearchUrl(address) {
+  if (!address?.trim()) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}`
 }

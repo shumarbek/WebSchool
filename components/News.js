@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
+import StaffProfileModal from '@/components/StaffProfileModal'
 
 const categoryLabels = {
   elon: "E'lon",
@@ -21,18 +22,27 @@ export default function News() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [media, setMedia] = useState(null)
+  const [staff, setStaff] = useState([])
+  const [selectedStaff, setSelectedStaff] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
     async function loadNews() {
-      const { data } = await supabase
+      const [{ data }, { data: staffRows }] = await Promise.all([
+        supabase
         .from('news')
         .select('*')
         .eq('is_published', true)
         .order('published_at', { ascending: false })
-        .limit(3)
+        .limit(3),
+        supabase
+          .from('staff')
+          .select('*')
+          .eq('is_active', true),
+      ])
 
       setItems(data || [])
+      setStaff(staffRows || [])
       setLoading(false)
     }
 
@@ -42,6 +52,8 @@ export default function News() {
   const filtered = useMemo(() => (
     items.filter((item) => item.title?.toLowerCase().includes(searchQuery.toLowerCase()))
   ), [items, searchQuery])
+  const staffById = useMemo(() => Object.fromEntries(staff.map((item) => [item.id, item])), [staff])
+  const staffByName = useMemo(() => Object.fromEntries(staff.map((item) => [item.full_name, item])), [staff])
 
   return (
     <section id="news" className="py-20 relative overflow-hidden">
@@ -158,7 +170,11 @@ export default function News() {
                   {selected.published_at && <span className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(selected.published_at).toLocaleDateString('uz-UZ')}</span>}
                   {selected.author && <span className="flex items-center gap-2"><UserRound className="h-4 w-4" />{selected.author}</span>}
                   {selected.event_start_at && <span className="flex items-center gap-2"><Clock className="h-4 w-4" />{new Date(selected.event_start_at).toLocaleString('uz-UZ')}</span>}
-                  {selected.responsible_person && <span className="flex items-center gap-2"><UserRound className="h-4 w-4" />Mas'ul: {selected.responsible_person}</span>}
+                  {selected.responsible_person && (
+                    <button type="button" onClick={() => setSelectedStaff(staffById[selected.responsible_person_id] || staffByName[selected.responsible_person])} className="flex items-center gap-2 text-primary disabled:text-gray-500" disabled={!(staffById[selected.responsible_person_id] || staffByName[selected.responsible_person])}>
+                      <UserRound className="h-4 w-4" />Mas'ul: {selected.responsible_person}
+                    </button>
+                  )}
                 </div>
                 <p className="mt-6 whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">{selected.content || "Qo'shimcha matn kiritilmagan."}</p>
               </div>
@@ -167,6 +183,7 @@ export default function News() {
         )}
       </AnimatePresence>
       <MediaLightbox media={media} onClose={() => setMedia(null)} />
+      <StaffProfileModal staff={selectedStaff} onClose={() => setSelectedStaff(null)} />
     </section>
   )
 }

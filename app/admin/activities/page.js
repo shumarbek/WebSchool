@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { 
-  Plus, Search, Edit2, Trash2, X, Calendar, MapPin, Users
+  Plus, Search, Edit2, Trash2, X, Calendar, MapPin, Users, ExternalLink
 } from 'lucide-react'
 
 const categories = ['olimpiada', 'sport', 'madaniyat', 'hashar', 'bayram']
@@ -21,6 +21,7 @@ export default function AdminActivitiesPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [teachers, setTeachers] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({
@@ -31,7 +32,9 @@ export default function AdminActivitiesPage() {
     image_url: '',
     image_urls: '',
     video_urls: '',
+    teacher_ids: [],
     location: '',
+    location_url: '',
     participants_count: '',
     is_published: true,
   })
@@ -39,7 +42,19 @@ export default function AdminActivitiesPage() {
 
   useEffect(() => {
     loadActivities()
+    loadTeachers()
   }, [])
+
+  async function loadTeachers() {
+    const { data } = await supabase
+      .from('staff')
+      .select('id, full_name')
+      .eq('role', 'pedagog')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true })
+
+    setTeachers(data || [])
+  }
 
   async function loadActivities() {
     try {
@@ -66,31 +81,21 @@ export default function AdminActivitiesPage() {
     }
     const imageUrls = parseUrls(formData.image_urls || formData.image_url)
     const videoUrls = parseUrls(formData.video_urls)
+    const teacherNames = teachers.filter((teacher) => formData.teacher_ids.includes(teacher.id)).map((teacher) => teacher.full_name)
     try {
       const submitData = {
         ...formData,
         image_urls: imageUrls,
         video_urls: videoUrls,
+        teacher_ids: formData.teacher_ids,
+        teacher_names: teacherNames,
         image_url: imageUrls[0] || '',
         participants_count: formData.participants_count ? parseInt(formData.participants_count) : null,
         date: formData.date || null,
         updated_at: new Date().toISOString(),
       }
 
-      if (editingItem) {
-        const { error } = await supabase
-          .from('activities')
-          .update(submitData)
-          .eq('id', editingItem.id)
-        
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('activities')
-          .insert({ ...submitData, created_at: new Date().toISOString() })
-        
-        if (error) throw error
-      }
+      await saveActivity(submitData)
       
       setShowModal(false)
       setEditingItem(null)
@@ -123,7 +128,9 @@ export default function AdminActivitiesPage() {
       image_url: '',
       image_urls: '',
       video_urls: '',
+      teacher_ids: [],
       location: '',
+      location_url: '',
       participants_count: '',
       is_published: true,
     })
@@ -139,7 +146,9 @@ export default function AdminActivitiesPage() {
       image_url: item.image_url || '',
       image_urls: Array.isArray(item.image_urls) ? item.image_urls.join('\n') : item.image_url || '',
       video_urls: Array.isArray(item.video_urls) ? item.video_urls.join('\n') : '',
+      teacher_ids: Array.isArray(item.teacher_ids) ? item.teacher_ids : [],
       location: item.location || '',
+      location_url: item.location_url || mapSearchUrl(item.location || ''),
       participants_count: item.participants_count?.toString() || '',
       is_published: item.is_published ?? true,
     })
@@ -151,6 +160,38 @@ export default function AdminActivitiesPage() {
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+  function toggleTeacher(id) {
+    setFormData((current) => ({
+      ...current,
+      teacher_ids: current.teacher_ids.includes(id)
+        ? current.teacher_ids.filter((teacherId) => teacherId !== id)
+        : [...current.teacher_ids, id],
+    }))
+  }
+
+  async function saveActivity(submitData) {
+    const payload = editingItem ? submitData : { ...submitData, created_at: new Date().toISOString() }
+    const result = editingItem
+      ? await supabase.from('activities').update(payload).eq('id', editingItem.id)
+      : await supabase.from('activities').insert(payload)
+
+    if (!isSchemaCacheColumnError(result.error)) {
+      if (result.error) throw result.error
+      return
+    }
+
+    const fallbackPayload = { ...payload }
+    delete fallbackPayload.teacher_ids
+    delete fallbackPayload.teacher_names
+    delete fallbackPayload.location_url
+
+    const fallbackResult = editingItem
+      ? await supabase.from('activities').update(fallbackPayload).eq('id', editingItem.id)
+      : await supabase.from('activities').insert(fallbackPayload)
+
+    if (fallbackResult.error) throw fallbackResult.error
+  }
 
   return (
     <div className="space-y-6">
@@ -358,10 +399,30 @@ export default function AdminActivitiesPage() {
                     <input
                       type="text"
                       value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      onChange={(e) => {
+                        const location = e.target.value
+                        setFormData({ ...formData, location, location_url: formData.location_url || mapSearchUrl(location) })
+                      }}
                       className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none"
                       placeholder="Manzil"
                     />
+                    {formData.location && (
+                      <div className="mt-2 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <iframe title="Manzil xaritasi" src={mapEmbedUrl(formData.location)} className="h-44 w-full" loading="lazy" />
+                        <div className="flex items-center gap-2 bg-white p-2 dark:bg-dark-50">
+                          <input
+                            value={formData.location_url}
+                            onChange={(e) => setFormData({ ...formData, location_url: e.target.value })}
+                            className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-100"
+                            placeholder="Xarita havolasi"
+                          />
+                          <a href={formData.location_url || mapSearchUrl(formData.location)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-2 text-xs font-medium text-primary">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Ochish
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Ishtirokchilar soni</label>
@@ -397,6 +458,20 @@ export default function AdminActivitiesPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Biriktirilgan o'qituvchilar</label>
+                  <div className="max-h-40 overflow-y-auto rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 p-3 space-y-2">
+                    {teachers.length === 0 ? (
+                      <p className="text-sm text-gray-500">O'qituvchi topilmadi</p>
+                    ) : teachers.map((teacher) => (
+                      <label key={teacher.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={formData.teacher_ids.includes(teacher.id)} onChange={() => toggleTeacher(teacher.id)} className="w-4 h-4" />
+                        {teacher.full_name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -428,4 +503,17 @@ function parseUrls(value) {
     .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function isSchemaCacheColumnError(error) {
+  return error?.code === 'PGRST204' || error?.message?.includes('schema cache')
+}
+
+function mapSearchUrl(location) {
+  if (!location?.trim()) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`
+}
+
+function mapEmbedUrl(location) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(location || '')}&output=embed`
 }

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
+import StaffProfileModal from '@/components/StaffProfileModal'
 
 const categoryLabels = {
   olimpiada: 'Olimpiada',
@@ -29,23 +30,32 @@ export default function Achievements() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [media, setMedia] = useState(null)
+  const [staff, setStaff] = useState([])
+  const [selectedStaff, setSelectedStaff] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
     async function loadAchievements() {
-      const { data } = await supabase
+      const [{ data }, { data: staffRows }] = await Promise.all([
+        supabase
         .from('achievements')
         .select('*')
         .eq('is_published', true)
         .order('award_date', { ascending: false })
-        .limit(3)
+        .limit(3),
+        supabase.from('staff').select('*').eq('is_active', true),
+      ])
 
       setItems(data || [])
+      setStaff(staffRows || [])
       setLoading(false)
     }
 
     loadAchievements()
   }, [])
+
+  const staffByName = Object.fromEntries(staff.map((item) => [item.full_name, item]))
+  const staffById = Object.fromEntries(staff.map((item) => [item.id, item]))
 
   return (
     <section id="achievements" className="py-20 bg-gray-50 dark:bg-dark-100 relative overflow-hidden">
@@ -129,7 +139,17 @@ export default function Achievements() {
                   </div>
                 )}
                 {Array.isArray(selected.teacher_names) && selected.teacher_names.length > 0 && (
-                  <p className="mt-5 text-sm text-gray-500">Mas'ul ustozlar: {selected.teacher_names.join(', ')}</p>
+                  <div className="mt-5 flex flex-wrap gap-2 text-sm">
+                    <span className="text-gray-500">Mas'ul ustozlar:</span>
+                    {selected.teacher_names.map((name, index) => {
+                      const teacher = staffById[selected.teacher_ids?.[index]] || staffByName[name]
+                      return (
+                        <button key={`${name}-${index}`} type="button" onClick={() => teacher && setSelectedStaff(teacher)} disabled={!teacher} className="text-primary disabled:text-gray-500">
+                          {name}{index < selected.teacher_names.length - 1 ? ',' : ''}
+                        </button>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
             </motion.article>
@@ -137,6 +157,7 @@ export default function Achievements() {
         )}
       </AnimatePresence>
       <MediaLightbox media={media} onClose={() => setMedia(null)} />
+      <StaffProfileModal staff={selectedStaff} onClose={() => setSelectedStaff(null)} />
     </section>
   )
 }

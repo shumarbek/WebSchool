@@ -19,7 +19,7 @@ export default function Contact() {
   }, [])
 
   const contactInfo = useMemo(() => [
-    { icon: MapPin, label: 'Manzil', value: settings.address || 'Manzil hali kiritilmagan', href: null },
+    { icon: MapPin, label: 'Manzil', value: settings.address || 'Manzil hali kiritilmagan', href: settings.address ? settings.address_map_url || mapSearchUrl(settings.address) : null },
     { icon: Phone, label: 'Telefon', value: settings.phone || 'Telefon hali kiritilmagan', href: settings.phone ? `tel:${settings.phone.replace(/\s/g, '')}` : null },
     { icon: Mail, label: 'Email', value: settings.email || 'Email hali kiritilmagan', href: settings.email ? `mailto:${settings.email}` : null },
     { icon: Clock, label: 'Ish vaqti', value: 'Dush-Jum: 08:00-18:00', href: null },
@@ -88,4 +88,9 @@ export default function Contact() {
       </div>
     </section>
   )
+}
+
+function mapSearchUrl(address) {
+  if (!address?.trim()) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}`
 }

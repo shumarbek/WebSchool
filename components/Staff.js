@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, BriefcaseBusiness, GraduationCap, Mail, Phone, UserRound, Users, X } from 'lucide-react'
 import Link from 'next/link'
@@ -35,6 +35,7 @@ export default function Staff({ featuredOnly = false }) {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [media, setMedia] = useState(null)
+  const [counts, setCounts] = useState({ teachers: 0, staff: 0 })
   const supabase = createClient()
 
   useEffect(() => {
@@ -49,23 +50,29 @@ export default function Staff({ featuredOnly = false }) {
         query = query.eq('is_featured', true).neq('role', 'xizmat').limit(6)
       }
 
-      const { data } = await query
+      const [{ data }, { data: countRows }] = await Promise.all([
+        query,
+        supabase
+          .from('staff')
+          .select('role, service_count')
+          .eq('is_active', true),
+      ])
 
       setStaff([...(data || [])].sort((a, b) => {
         const aName = a.role === 'xizmat' ? a.work_type || '' : a.full_name || ''
         const bName = b.role === 'xizmat' ? b.work_type || '' : b.full_name || ''
         return aName.localeCompare(bName, 'uz')
       }))
+      setCounts((countRows || []).reduce((acc, item) => {
+        if (item.role === 'pedagog') return { ...acc, teachers: acc.teachers + 1 }
+        if (item.role === 'xizmat') return { ...acc, staff: acc.staff + (Number(item.service_count) || 0) }
+        return { ...acc, staff: acc.staff + 1 }
+      }, { teachers: 0, staff: 0 }))
       setLoading(false)
     }
 
     loadStaff()
   }, [featuredOnly])
-
-  const counts = useMemo(() => ({
-    teachers: staff.filter((item) => item.role === 'pedagog').length,
-    staff: staff.filter((item) => item.role !== 'pedagog').length,
-  }), [staff])
 
   return (
     <section id="staff" className="py-20 bg-gray-50 dark:bg-dark-100 relative overflow-hidden">

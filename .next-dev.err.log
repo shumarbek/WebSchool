@@ -1,20 +1,2 @@
  ⚠ Port 3000 is in use, trying 3001 instead.
- ⨯ TypeError: Cannot read properties of undefined (reading 'entryCSSFiles')
-    at rD (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:3748)
-    at rJ (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:12942)
-    at r3 (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:16180)
-    at ne (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:40:23887)
-    at D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:43:726
-    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
-    at Object.wrap (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:36:17827)
-    at D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:43:616
-    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
-    at Object.wrap (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:36:16929)
-    at nt (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:43:543)
-    at nb.render (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:43:4699)
-    at doRender (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\server\base-server.js:1427:44)
-    at cacheEntry.responseCache.get.routeKind (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\server\base-server.js:1588:34)
-    at ResponseCache.get (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\server\response-cache\index.js:49:26)
-    at DevServer.renderToResponseWithComponentsImpl (D:\Course\Finel course projects\WebSchool\node_modules\next\dist\server\base-server.js:1496:53) {
-  page: '/admin/staff'
-}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'D:\Course\Finel course projects\WebSchool\.next\cache\webpack\client-development\28.pack.gz_' -> 'D:\Course\Finel course projects\WebSchool\.next\cache\webpack\client-development\28.pack.gz'

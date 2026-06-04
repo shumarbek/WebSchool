@@ -20,6 +20,7 @@ export default function AdminNewsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [teachers, setTeachers] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [formData, setFormData] = useState({
@@ -29,6 +30,7 @@ export default function AdminNewsPage() {
     image_url: '',
     author: '',
     event_start_at: '',
+    responsible_person_id: '',
     responsible_person: '',
     is_published: true,
     is_featured: false,
@@ -37,7 +39,19 @@ export default function AdminNewsPage() {
 
   useEffect(() => {
     loadNews()
+    loadTeachers()
   }, [])
+
+  async function loadTeachers() {
+    const { data } = await supabase
+      .from('staff')
+      .select('id, full_name')
+      .eq('role', 'pedagog')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true })
+
+    setTeachers(data || [])
+  }
 
   async function loadNews() {
     try {
@@ -61,34 +75,23 @@ export default function AdminNewsPage() {
       alert('Maqola uchun muallif majburiy')
       return
     }
-    if (formData.category === 'tadbir' && (!formData.event_start_at || !formData.responsible_person.trim())) {
+    if (formData.category === 'tadbir' && (!formData.event_start_at || !formData.responsible_person_id)) {
       alert('Tadbir uchun boshlanish vaqti va mas\'ul shaxs majburiy')
       return
     }
     try {
+      const selectedTeacher = teachers.find((teacher) => teacher.id === formData.responsible_person_id)
       const submitData = {
         ...formData,
         event_start_at: formData.event_start_at || null,
-        responsible_person: formData.category === 'tadbir' ? formData.responsible_person : null,
+        responsible_person_id: formData.category === 'tadbir' ? formData.responsible_person_id : null,
+        responsible_person: formData.category === 'tadbir' ? selectedTeacher?.full_name || formData.responsible_person : null,
         author: formData.category === 'maqola' ? formData.author : formData.author,
         published_at: formData.is_published ? (editingItem?.published_at || new Date().toISOString()) : null,
         updated_at: new Date().toISOString(),
       }
 
-      if (editingItem) {
-        const { error } = await supabase
-          .from('news')
-          .update(submitData)
-          .eq('id', editingItem.id)
-        
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('news')
-          .insert({ ...submitData, created_at: new Date().toISOString() })
-        
-        if (error) throw error
-      }
+      await saveNews(submitData)
       
       setShowModal(false)
       setEditingItem(null)
@@ -120,6 +123,7 @@ export default function AdminNewsPage() {
       image_url: '',
       author: '',
       event_start_at: '',
+      responsible_person_id: '',
       responsible_person: '',
       is_published: true,
       is_featured: false,
@@ -135,6 +139,7 @@ export default function AdminNewsPage() {
       image_url: item.image_url || '',
       author: item.author || '',
       event_start_at: item.event_start_at ? item.event_start_at.slice(0, 16) : '',
+      responsible_person_id: item.responsible_person_id || '',
       responsible_person: item.responsible_person || '',
       is_published: item.is_published ?? true,
       is_featured: item.is_featured ?? false,
@@ -147,6 +152,27 @@ export default function AdminNewsPage() {
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+  async function saveNews(submitData) {
+    const payload = editingItem ? submitData : { ...submitData, created_at: new Date().toISOString() }
+    const result = editingItem
+      ? await supabase.from('news').update(payload).eq('id', editingItem.id)
+      : await supabase.from('news').insert(payload)
+
+    if (!isSchemaCacheColumnError(result.error)) {
+      if (result.error) throw result.error
+      return
+    }
+
+    const fallbackPayload = { ...payload }
+    delete fallbackPayload.responsible_person_id
+
+    const fallbackResult = editingItem
+      ? await supabase.from('news').update(fallbackPayload).eq('id', editingItem.id)
+      : await supabase.from('news').insert(fallbackPayload)
+
+    if (fallbackResult.error) throw fallbackResult.error
+  }
 
   return (
     <div className="space-y-6">
@@ -367,7 +393,13 @@ export default function AdminNewsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1.5">Mas'ul shaxs *</label>
-                      <input type="text" required value={formData.responsible_person} onChange={(e) => setFormData({ ...formData, responsible_person: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none" />
+                      <select required value={formData.responsible_person_id} onChange={(e) => {
+                        const teacher = teachers.find((item) => item.id === e.target.value)
+                        setFormData({ ...formData, responsible_person_id: e.target.value, responsible_person: teacher?.full_name || '' })
+                      }} className="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary outline-none">
+                        <option value="">Tanlang</option>
+                        {teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.full_name}</option>)}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -406,4 +438,8 @@ export default function AdminNewsPage() {
       </AnimatePresence>
     </div>
   )
+}
+
+function isSchemaCacheColumnError(error) {
+  return error?.code === 'PGRST204' || error?.message?.includes('schema cache')
 }

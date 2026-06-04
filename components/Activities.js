@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
+import StaffProfileModal from '@/components/StaffProfileModal'
 
 const categoryLabels = {
   olimpiada: 'Olimpiada',
@@ -21,23 +22,32 @@ export default function Activities() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [media, setMedia] = useState(null)
+  const [staff, setStaff] = useState([])
+  const [selectedStaff, setSelectedStaff] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
     async function loadActivities() {
-      const { data } = await supabase
+      const [{ data }, { data: staffRows }] = await Promise.all([
+        supabase
         .from('activities')
         .select('*')
         .eq('is_published', true)
         .order('date', { ascending: false })
-        .limit(3)
+        .limit(3),
+        supabase.from('staff').select('*').eq('is_active', true),
+      ])
 
       setItems(data || [])
+      setStaff(staffRows || [])
       setLoading(false)
     }
 
     loadActivities()
   }, [])
+
+  const staffByName = Object.fromEntries(staff.map((item) => [item.full_name, item]))
+  const staffById = Object.fromEntries(staff.map((item) => [item.id, item]))
 
   return (
     <section id="activities" className="py-20 relative overflow-hidden">
@@ -82,7 +92,12 @@ export default function Activities() {
                   <p className="text-sm text-gray-500 line-clamp-3 mb-4">{item?.description || ''}</p>
                   <div className="space-y-2 text-sm text-gray-500">
                     {item?.date && <p className="flex items-center gap-2"><Calendar className="w-4 h-4" />{item.date}</p>}
-                    {item?.location && <p className="flex items-center gap-2"><MapPin className="w-4 h-4" />{item.location}</p>}
+                    {item?.location && (
+                      <a href={item.location_url || mapSearchUrl(item.location)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 hover:text-primary">
+                        <MapPin className="w-4 h-4" />
+                        {item.location}
+                      </a>
+                    )}
                     {item?.participants_count ? <p className="flex items-center gap-2"><Users className="w-4 h-4" />{item.participants_count} ishtirokchi</p> : null}
                   </div>
                 </div>
@@ -110,10 +125,28 @@ export default function Activities() {
                 <h3 className="mt-4 text-2xl font-bold md:text-3xl">{selected.title}</h3>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
                   {selected.date && <span className="flex items-center gap-2"><Calendar className="h-4 w-4" />{selected.date}</span>}
-                  {selected.location && <span className="flex items-center gap-2"><MapPin className="h-4 w-4" />{selected.location}</span>}
+                  {selected.location && (
+                    <a href={selected.location_url || mapSearchUrl(selected.location)} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-primary">
+                      <MapPin className="h-4 w-4" />
+                      {selected.location}
+                    </a>
+                  )}
                   {selected.participants_count ? <span className="flex items-center gap-2"><Users className="h-4 w-4" />{selected.participants_count} ishtirokchi</span> : null}
                 </div>
                 <p className="mt-6 whitespace-pre-line leading-7 text-gray-700 dark:text-gray-300">{selected.description || "Qo'shimcha ma'lumot kiritilmagan."}</p>
+                {Array.isArray(selected.teacher_names) && selected.teacher_names.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2 text-sm">
+                    <span className="text-gray-500">Biriktirilgan o'qituvchilar:</span>
+                    {selected.teacher_names.map((name, index) => {
+                      const teacher = staffById[selected.teacher_ids?.[index]] || staffByName[name]
+                      return (
+                        <button key={`${name}-${index}`} type="button" onClick={() => teacher && setSelectedStaff(teacher)} disabled={!teacher} className="text-primary disabled:text-gray-500">
+                          {name}{index < selected.teacher_names.length - 1 ? ',' : ''}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
                 {Array.isArray(selected.image_urls) && selected.image_urls.length > 1 && (
                   <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
                     {selected.image_urls.slice(1).map((url) => (
@@ -139,6 +172,12 @@ export default function Activities() {
         )}
       </AnimatePresence>
       <MediaLightbox media={media} onClose={() => setMedia(null)} />
+      <StaffProfileModal staff={selectedStaff} onClose={() => setSelectedStaff(null)} />
     </section>
   )
+}
+
+function mapSearchUrl(location) {
+  if (!location?.trim()) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`
 }

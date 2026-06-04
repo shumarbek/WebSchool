@@ -7,121 +7,36 @@
   - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 12.1s
- ○ Compiling / ...
- ✓ Compiled / in 66.9s (1495 modules)
- GET / 200 in 22094ms
- GET / 200 in 77624ms
- GET / 200 in 443ms
- GET / 200 in 994ms
- ○ Compiling /admin ...
- ✓ Compiled /admin in 8.9s (1524 modules)
- GET /admin 200 in 13289ms
- ○ Compiling /admin/login ...
- ✓ Compiled /admin/login in 8.2s (1529 modules)
- GET /admin 200 in 268ms
- ○ Compiling /admin/staff ...
- ✓ Compiled /admin/staff in 2.8s (1543 modules)
- ○ Compiling /staff ...
- ✓ Compiled /staff in 1436ms (1550 modules)
-   Reload env: .env.local
- ✓ Compiled in 28.6s (1564 modules)
-   Reload env: .env.local
- ✓ Compiled in 6s (1550 modules)
- GET /admin/staff 200 in 3284ms
- GET /staff 200 in 2465ms
- GET /staff 200 in 664ms
- ○ Compiling /admin/settings ...
- ✓ Compiled /admin/settings in 13.7s (1580 modules)
- GET / 200 in 1137ms
- ○ Compiling /admin/stats ...
- ✓ Compiled /admin/stats in 20.2s (1577 modules)
- ○ Compiling /admin/achievements ...
- ✓ Compiled /admin/achievements in 16.4s (1580 modules)
- ○ Compiling /admin/activities ...
- ✓ Compiled /admin/activities in 4.6s (1569 modules)
- ○ Compiling /activities ...
- ✓ Compiled /activities in 6.1s (1570 modules)
- ○ Compiling /admin/library ...
- ✓ Compiled /admin/library in 14s (1572 modules)
- GET /admin/library 200 in 4987ms
- GET / 200 in 2670ms
- ○ Compiling /staff ...
- ✓ Compiled /staff in 6.1s (784 modules)
- ○ Compiling /admin/schedule ...
- ✓ Compiled /admin/achievements in 17.2s (1578 modules)
- GET /staff 200 in 3403ms
- ○ Compiling /admin/news ...
- ✓ Compiled /admin/news in 11.2s (1593 modules)
- ✓ Compiled in 3.8s (807 modules)
- ○ Compiling /news ...
- ✓ Compiled /news in 4.7s (1598 modules)
- ○ Compiling /admin/schedule ...
- ✓ Compiled /admin/schedule in 8s (784 modules)
- GET /news 200 in 7713ms
+ ✓ Ready in 5.8s
  ○ Compiling /schedule ...
- ✓ Compiled /schedule in 19.3s (1597 modules)
- GET /schedule 200 in 1213ms
- ○ Compiling /library ...
- ✓ Compiled /library in 16s (1596 modules)
- ○ Compiling /admin/history ...
- ✓ Compiled /admin/history in 25.6s (1572 modules)
- ✓ Compiled in 2.4s (815 modules)
- ○ Compiling /history ...
- ✓ Compiled /history in 4.6s (1576 modules)
- GET /history 200 in 2466ms
- ✓ Compiled in 20.9s (1568 modules)
- ✓ Compiled in 2.3s (816 modules)
- ✓ Compiled in 2.2s (1568 modules)
- ✓ Compiled in 4.5s (816 modules)
- ✓ Compiled in 1535ms (816 modules)
- ✓ Compiled in 2.1s (1568 modules)
- ✓ Compiled in 2.1s (1568 modules)
- ✓ Compiled in 1025ms (816 modules)
- ✓ Compiled in 1057ms (816 modules)
- ✓ Compiled in 1418ms (1568 modules)
- GET /history 200 in 2682ms
+ ✓ Compiled /schedule in 14.9s (1411 modules)
+ GET /schedule 200 in 19412ms
+ GET /schedule 200 in 114ms
+ ○ Compiling /admin/login ...
+ ✓ Compiled /admin/login in 5.9s (1457 modules)
+ GET /admin/login 200 in 7702ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 1338ms (1467 modules)
+ GET /admin 200 in 1951ms
+ ○ Compiling /admin/schedule ...
+ ✓ Compiled /admin/schedule in 6.1s (1481 modules)
+ GET /admin/schedule 200 in 8184ms
+ ✓ Compiled in 44.4s (1495 modules)
+ ✓ Compiled in 12.4s (1495 modules)
+ ✓ Compiled in 949ms (750 modules)
+ ✓ Compiled in 10.1s (750 modules)
+ ✓ Compiled in 4.6s (750 modules)
+ ✓ Compiled in 9s (750 modules)
+ ✓ Compiled in 1808ms (750 modules)
+ ✓ Compiled in 1084ms (750 modules)
+ ✓ Compiled in 6.2s (1495 modules)
+ ✓ Compiled in 7.1s (750 modules)
  ○ Compiling /_not-found ...
- ✓ Compiled /_not-found in 11.6s (1557 modules)
- GET /_next/static/css/app/layout.css?v=1780499798527 404 in 12472ms
- GET /_next/static/chunks/webpack.js?v=1780499798527 404 in 12564ms
- GET /_next/static/chunks/main-app.js?v=1780499798527 404 in 12519ms
- GET /_next/static/chunks/app/history/page.js 404 in 12518ms
- GET /_next/static/chunks/app-pages-internals.js 404 in 12522ms
- GET /_next/static/chunks/app/history/layout.js 404 in 12515ms
- GET /_next/static/chunks/app/layout.js 404 in 78ms
- GET /history 200 in 506ms
- GET /_next/static/css/app/layout.css?v=1780499835689 404 in 311ms
- GET /_next/static/chunks/main-app.js?v=1780499835689 404 in 446ms
- GET /_next/static/chunks/app-pages-internals.js 404 in 437ms
- GET /_next/static/chunks/app/history/page.js 404 in 425ms
- GET /_next/static/chunks/app/history/layout.js 404 in 423ms
- GET /_next/static/chunks/app/layout.js 404 in 280ms
- ○ Compiling / ...
- ✓ Compiled / in 3.2s (785 modules)
- GET / 200 in 4237ms
- GET /_next/static/css/app/layout.css?v=1780499849002 404 in 139ms
- GET /_next/static/chunks/main-app.js?v=1780499849002 404 in 197ms
- GET /_next/static/chunks/app-pages-internals.js 404 in 197ms
- GET /_next/static/chunks/app/layout.js 404 in 199ms
- GET /_next/static/chunks/app/page.js 404 in 194ms
- GET / 200 in 194ms
- GET /_next/static/css/app/layout.css?v=1780499852587 404 in 82ms
- GET /_next/static/chunks/main-app.js?v=1780499852587 404 in 251ms
- GET /_next/static/chunks/app-pages-internals.js 404 in 249ms
- GET /_next/static/chunks/app/page.js 404 in 249ms
- GET /_next/static/chunks/app/layout.js 404 in 247ms
- ○ Compiling /admin/staff ...
- ✓ Compiled /admin/staff in 8.3s (758 modules)
- ○ Compiling /_error ...
- ✓ Compiled /_error in 8.8s (1787 modules)
- GET /admin/staff 200 in 1566ms
+ ✓ Compiled /_not-found in 6.3s (1484 modules)
+ GET /_next/static/css/app/layout.css?v=1780554092876 404 in 7203ms
+ ✓ Compiled in 1650ms (752 modules)
+ GET /_next/static/css/app/layout.css?v=1780554102213 404 in 84ms
+ ✓ Compiled in 23.8s (750 modules)
  ○ Compiling /_not-found ...
- ✓ Compiled /_not-found in 2s (1790 modules)
- GET /_next/static/chunks/app/admin/staff/page.js 404 in 3033ms
- GET /_next/static/chunks/app/admin/layout.js 404 in 3006ms
- ✓ Compiled in 97.5s (1793 modules)
- ✓ Compiled in 41.6s (1793 modules)
- ✓ Compiled in 24.4s (1001 modules)
- ✓ Compiled in 45.7s (1001 modules)
-[?25h
+ ✓ Compiled /_not-found in 6.6s (1484 modules)
+ GET /admin/schedule 404 in 638ms

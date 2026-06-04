@@ -18,6 +18,8 @@ import {
   Settings,
   History,
   Users,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 
 const menuItems = [
@@ -71,13 +73,6 @@ function AdminLayoutContent({ children }) {
             </div>
             {sidebarOpen && <span className="font-bold gradient-text">DOSOV</span>}
           </Link>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            title="Menyuni yig'ish"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
         </div>
 
         <nav className="p-3 space-y-1">
@@ -124,13 +119,24 @@ function AdminLayoutContent({ children }) {
 
       <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <header className="sticky top-0 z-20 bg-white dark:bg-dark-50 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            title="Menyuni ochish"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              title="Menyuni ochish"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => setSidebarOpen((value) => !value)}
+              className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 transition-all hover:border-primary/40 hover:text-primary dark:border-gray-700 dark:bg-dark-100 dark:text-gray-300 lg:inline-flex"
+              title={sidebarOpen ? "Menyuni yig'ish" : 'Menyuni ochish'}
+              aria-label={sidebarOpen ? "Menyuni yig'ish" : 'Menyuni ochish'}
+            >
+              {sidebarOpen ? <ChevronsLeft className="h-4 w-4" /> : <ChevronsRight className="h-4 w-4" />}
+              <span>{sidebarOpen ? "Menyuni yig'ish" : 'Menyuni ochish'}</span>
+            </button>
+          </div>
 
           <div className="ml-auto flex items-center gap-4">
             <div className="hidden sm:block text-right">

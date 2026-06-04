@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { Clock, Edit2, Plus, Search, Trash2, X } from 'lucide-react'
+import { Clock, Edit2, Plus, Trash2, X } from 'lucide-react'
 
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 const grades = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
@@ -23,7 +23,7 @@ export default function AdminSchedulePage() {
   const [rows, setRows] = useState([])
   const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedClass, setSelectedClass] = useState('1-A')
   const [showModal, setShowModal] = useState(false)
   const [editingKey, setEditingKey] = useState(null)
   const [formData, setFormData] = useState({ grade: 1, tur: 'A', day: 'Dushanba', lessons: [{ ...emptyLesson }] })
@@ -38,8 +38,14 @@ export default function AdminSchedulePage() {
       supabase.from('schedule').select('*, staff(full_name, subject)').order('grade').order('tur').order('day').order('lesson_number'),
       supabase.from('staff').select('id, full_name, subject').eq('role', 'pedagog').eq('is_active', true).order('full_name'),
     ])
-    setRows(scheduleRows || [])
+    const nextRows = scheduleRows || []
+    setRows(nextRows)
     setTeachers(staffRows || [])
+    setSelectedClass((current) => {
+      if (current && nextRows.some((row) => `${row.grade}-${row.tur}` === current)) return current
+      if (nextRows.length > 0) return `${nextRows[0].grade}-${nextRows[0].tur}`
+      return current || '1-A'
+    })
     setLoading(false)
   }
 
@@ -50,8 +56,16 @@ export default function AdminSchedulePage() {
       if (!map.has(key)) map.set(key, { key, grade: row.grade, tur: row.tur, day: row.day, lessons: [] })
       map.get(key).lessons.push(row)
     })
-    return Array.from(map.values()).filter((group) => `${group.grade}-${group.tur} ${group.day}`.toLowerCase().includes(searchQuery.toLowerCase()))
-  }, [rows, searchQuery])
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.grade !== b.grade) return a.grade - b.grade
+      if (a.tur !== b.tur) return a.tur.localeCompare(b.tur)
+      return days.indexOf(a.day) - days.indexOf(b.day)
+    })
+  }, [rows])
+
+  const classSet = useMemo(() => new Set(rows.map((row) => `${row.grade}-${row.tur}`)), [rows])
+  const classGrades = useMemo(() => grades, [])
+  const selectedGroups = useMemo(() => groups.filter((group) => `${group.grade}-${group.tur}` === selectedClass), [groups, selectedClass])
 
   const availableDays = useMemo(() => {
     const used = new Set(rows.filter((row) => row.grade === parseInt(formData.grade) && row.tur === formData.tur).map((row) => row.day))
@@ -60,8 +74,11 @@ export default function AdminSchedulePage() {
   }, [editingKey, formData.grade, formData.tur, rows])
 
   function resetForm() {
-    const firstDay = days.find((day) => !rows.some((row) => row.grade === 1 && row.tur === 'A' && row.day === day)) || days[0]
-    setFormData({ grade: 1, tur: 'A', day: firstDay, lessons: [{ ...emptyLesson }] })
+    const [gradeValue, turValue] = (selectedClass || '1-A').split('-')
+    const grade = parseInt(gradeValue) || 1
+    const tur = turValue || 'A'
+    const firstDay = days.find((day) => !rows.some((row) => row.grade === grade && row.tur === tur && row.day === day)) || days[0]
+    setFormData({ grade, tur, day: firstDay, lessons: [{ ...emptyLesson }] })
   }
 
   function openCreate() {
@@ -159,18 +176,45 @@ export default function AdminSchedulePage() {
         <button onClick={openCreate} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent-purple px-4 py-2.5 font-medium text-white"><Plus className="h-5 w-5" />Kun qo'shish</button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-        <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50" placeholder="Masalan: 7-A Dushanba" />
+      <div className="overflow-x-auto pb-2">
+        <div className="inline-flex min-w-max flex-col gap-2 rounded-2xl bg-white p-2 shadow-sm dark:bg-dark-50">
+          {['A', 'B'].map((tur) => (
+            <div key={tur} className="flex gap-2">
+              {classGrades.map((grade) => {
+                const cls = `${grade}-${tur}`
+                const hasSchedule = classSet.has(cls)
+                return (
+                  <button
+                    key={cls}
+                    type="button"
+                    onClick={() => setSelectedClass(cls)}
+                    className={`h-11 min-w-20 rounded-xl px-3 text-sm font-semibold transition-all ${selectedClass === cls ? 'bg-gradient-to-r from-primary to-accent-purple text-white shadow-lg shadow-primary/20' : hasSchedule ? 'bg-gray-50 text-gray-700 hover:text-primary dark:bg-dark-100 dark:text-gray-300' : 'bg-gray-50 text-gray-400 hover:text-primary dark:bg-dark-100 dark:text-gray-500'}`}
+                  >
+                    {cls}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-      ) : groups.length === 0 ? (
-        <div className="py-12 text-center"><Clock className="mx-auto mb-4 h-12 w-12 text-gray-300" /><p className="text-gray-500">Jadval topilmadi</p></div>
+      ) : selectedGroups.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-12 text-center dark:border-gray-700 dark:bg-dark-50">
+          <Clock className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <p className="font-medium text-gray-600 dark:text-gray-300">{selectedClass} sinf uchun jadval yo'q</p>
+          <p className="mt-1 text-sm text-gray-500">Kun qo'shish tugmasi orqali haftalik jadvalni kiriting.</p>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {groups.map((group) => (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold">{selectedClass} sinf haftalik jadvali</h2>
+            <p className="text-sm text-gray-500">Faqat jadval biriktirilgan hafta kunlari ko'rsatiladi.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {selectedGroups.map((group) => (
             <div key={group.key} className="glass rounded-2xl p-4">
               <div className="mb-4 flex items-start justify-between">
                 <div>
@@ -192,6 +236,7 @@ export default function AdminSchedulePage() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 

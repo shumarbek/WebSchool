@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
-import { Camera, Image, Mail, MapPin, Phone, PlayCircle, Save, Send, Video, Palette } from 'lucide-react'
+import { Camera, ExternalLink, Image, Mail, MapPin, Phone, PlayCircle, Save, Send, Video, Palette } from 'lucide-react'
 
 const backgroundTypes = [
   { value: 'gradient', label: 'Gradient', icon: Palette },
@@ -31,6 +31,7 @@ export default function AdminSettingsPage() {
     phone: '',
     email: '',
     address: '',
+    address_map_url: '',
     youtube_url: '',
     instagram_url: '',
     telegram_url: '',
@@ -64,6 +65,7 @@ export default function AdminSettingsPage() {
           phone: platformData.phone || '',
           email: platformData.email || '',
           address: platformData.address || '',
+          address_map_url: platformData.address_map_url || mapSearchUrl(platformData.address || ''),
           youtube_url: platformData.youtube_url || '',
           instagram_url: platformData.instagram_url || '',
           telegram_url: platformData.telegram_url || '',
@@ -93,9 +95,17 @@ export default function AdminSettingsPage() {
       if (heroResult.error) throw heroResult.error
       if (!heroId && heroResult.data?.id) setHeroId(heroResult.data.id)
 
-      const platformResult = platformId
+      let platformResult = platformId
         ? await supabase.from('platform_settings').update(platformPayload).eq('id', platformId)
         : await supabase.from('platform_settings').insert({ ...platformPayload, created_at: now }).select('id').single()
+
+      if (isSchemaCacheColumnError(platformResult.error)) {
+        const fallbackPayload = { ...platformPayload }
+        delete fallbackPayload.address_map_url
+        platformResult = platformId
+          ? await supabase.from('platform_settings').update(fallbackPayload).eq('id', platformId)
+          : await supabase.from('platform_settings').insert({ ...fallbackPayload, created_at: now }).select('id').single()
+      }
 
       if (platformResult.error) throw platformResult.error
       if (!platformId && platformResult.data?.id) setPlatformId(platformResult.data.id)
@@ -150,7 +160,6 @@ export default function AdminSettingsPage() {
             {[
               ['phone', 'Telefon', Phone],
               ['email', 'Email', Mail],
-              ['address', 'Manzil', MapPin],
               ['youtube_url', 'YouTube', PlayCircle],
               ['instagram_url', 'Instagram', Camera],
               ['telegram_url', 'Telegram', Send],
@@ -164,6 +173,40 @@ export default function AdminSettingsPage() {
               </label>
             ))}
           </div>
+          <div className="mt-4">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">Manzil</span>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={platform.address}
+                  onChange={(e) => {
+                    const address = e.target.value
+                    setPlatform({ ...platform, address, address_map_url: platform.address_map_url || mapSearchUrl(address) })
+                  }}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-100 py-2.5 pl-10 pr-4 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50"
+                  placeholder="Maktab manzili"
+                />
+              </div>
+            </label>
+            {platform.address && (
+              <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+                <iframe title="Maktab manzili xaritasi" src={mapEmbedUrl(platform.address)} className="h-56 w-full" loading="lazy" />
+                <div className="flex items-center gap-2 bg-white p-3 dark:bg-dark-50">
+                  <input
+                    value={platform.address_map_url}
+                    onChange={(e) => setPlatform({ ...platform, address_map_url: e.target.value })}
+                    className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-100"
+                    placeholder="Xarita havolasi"
+                  />
+                  <a href={platform.address_map_url || mapSearchUrl(platform.address)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+                    <ExternalLink className="h-4 w-4" />
+                    Ochish
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
         <button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent-purple py-3 font-medium text-white disabled:opacity-50">
@@ -174,4 +217,17 @@ export default function AdminSettingsPage() {
       </form>
     </div>
   )
+}
+
+function isSchemaCacheColumnError(error) {
+  return error?.code === 'PGRST204' || error?.message?.includes('schema cache')
+}
+
+function mapSearchUrl(address) {
+  if (!address?.trim()) return ''
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}`
+}
+
+function mapEmbedUrl(address) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(address || '')}&output=embed`
 }

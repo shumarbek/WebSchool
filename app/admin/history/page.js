@@ -45,12 +45,27 @@ export default function AdminHistoryPage() {
 
   async function loadItems() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('milestones')
       .select('*')
       .order('year', { ascending: true })
       .order('month', { ascending: true })
-    setItems(data || [])
+
+    if (error) {
+      const fallback = await supabase
+        .from('milestones')
+        .select('*')
+        .order('year', { ascending: true })
+
+      if (fallback.error) {
+        console.error('Error loading history:', fallback.error)
+        setItems([])
+      } else {
+        setItems(fallback.data || [])
+      }
+    } else {
+      setItems(data || [])
+    }
     setLoading(false)
   }
 
@@ -101,23 +116,48 @@ export default function AdminHistoryPage() {
       updated_at: new Date().toISOString(),
     }
 
-    if (editingItem) {
-      await supabase.from('milestones').update(payload).eq('id', editingItem.id)
-    } else {
-      await supabase.from('milestones').insert({ ...payload, created_at: new Date().toISOString() })
+    try {
+      await saveHistory(payload)
+      setShowModal(false)
+      setEditingItem(null)
+      resetForm()
+      loadItems()
+    } catch (error) {
+      console.error('Error saving history:', error)
+      alert("Tarixni saqlashda xatolik yuz berdi. Supabase jadvalini yangilash uchun migration SQL ni ishga tushiring.")
+    } finally {
+      setSaving(false)
     }
-
-    setSaving(false)
-    setShowModal(false)
-    setEditingItem(null)
-    resetForm()
-    loadItems()
   }
 
   async function handleDelete(item) {
     if (!confirm(`"${item.title}" yozuvini o'chirishni xohlaysizmi?`)) return
     await supabase.from('milestones').delete().eq('id', item.id)
     loadItems()
+  }
+
+  async function saveHistory(payload) {
+    const row = editingItem ? payload : { ...payload, created_at: new Date().toISOString() }
+    const result = editingItem
+      ? await supabase.from('milestones').update(row).eq('id', editingItem.id)
+      : await supabase.from('milestones').insert(row)
+
+    if (!isSchemaCacheColumnError(result.error)) {
+      if (result.error) throw result.error
+      return
+    }
+
+    const fallbackRow = { ...row }
+    delete fallbackRow.month
+    delete fallbackRow.image_urls
+    delete fallbackRow.is_director
+    delete fallbackRow.director_name
+
+    const fallbackResult = editingItem
+      ? await supabase.from('milestones').update(fallbackRow).eq('id', editingItem.id)
+      : await supabase.from('milestones').insert(fallbackRow)
+
+    if (fallbackResult.error) throw fallbackResult.error
   }
 
   const filtered = items.filter((item) => {
@@ -243,4 +283,8 @@ function parseUrls(value) {
 function formatDate(item) {
   const month = months.find(([value]) => value === Number(item.month))?.[1]
   return month ? `${item.year} / ${month}` : item.year
+}
+
+function isSchemaCacheColumnError(error) {
+  return error?.code === 'PGRST204' || error?.message?.includes('schema cache') || error?.message?.includes('column')
 }
