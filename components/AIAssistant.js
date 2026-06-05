@@ -1,105 +1,57 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, Send, Sparkles, Bot, User, X, Minimize2, Maximize2, Volume2, VolumeX } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Bot, Loader2, MessageSquare, Send, Sparkles, User, X } from 'lucide-react'
+import useBodyScrollLock from '@/hooks/useBodyScrollLock'
 
 const suggestions = [
-  "Bugun 9-A da nechta dars bor?",
-  "Fizika kitobini top",
-  "Direktor qabul vaqti",
-  "Kutubxona qayerda?",
-  "Matematika o'qituvchisi kim?",
-  "Sport zali ochish vaqti",
-  "Bugungi jadval",
-  "Maktab manzili"
+  "Bugun dars jadvali qanday?",
+  "Matematika o'qituvchilari kim?",
+  "So'nggi yangiliklar bormi?",
+  "Kutubxonada qanday kitoblar bor?",
+  "Maktab manzili qayerda?",
+  "Yaqin tadbirlar haqida ayt",
 ]
-
-const responses = {
-  '9-a': {
-    answer: "9-A sinfida bugun 5 ta dars:\n\n1. Matematika - 08:00-08:45 (201-xona, Aziz Qodirov)\n2. Fizika - 08:55-09:40 (305-xona, Malika Yusupova)\n3. Ingliz tili - 10:00-10:45 (102-xona, Bobur Aliyev)\n4. Tarix - 11:05-11:50 (401-xona, Gulnora Karimova)\n5. Kimyo - 12:10-12:55 (302-xona, Nilufar Ahmedova)",
-    links: [{ text: "To'liq jadvalni ko'rish", href: "#schedule" }]
-  },
-  'fizika': {
-    answer: "Fizika kitoblari:\n\n1. 'Fizika: Nazariy asoslar' - M. Yusupova (380 bet)\n2. 'Fizika amaliyot' - S. Rahimov (220 bet)\n3. 'Fizika masalalar to\'plami' (450 bet)\n\nBarcha kitoblarni kutubxona bo'limidan olishingiz mumkin.",
-    links: [{ text: "Kutubxonaga o'tish", href: "#library" }]
-  },
-  'direktor': {
-    answer: "Direktor - Rustam Ahmedov\n\nQabul vaqtlari:\n• Dushanba-Juma: 09:00-12:00\n• Shanba: 10:00-13:00\n• Tushlik: 13:00-14:00\n\nBog'lanish: +998 90 000-00-01",
-    links: []
-  },
-  'kutubxona': {
-    answer: "Kutubxona 2-qavatda joylashgan.\n\nIsh vaqti:\n• Dushanba-Juma: 08:00-18:00\n• Shanba: 09:00-15:00\n• Yakshanba: Yopiq\n\nXizmatlar: Onlayn kitob o'qish, qog'oz kitoblar, ishchi zonalar.",
-    links: [{ text: "Kutubxona bo'limi", href: "#library" }]
-  },
-  'default': {
-    answer: "Kechirasiz, savolni aniqroq yozing yoki quyidagi variantlardan birini taning. Men quyidagi savollarga javob bera olaman:\n\n• Sinf jadvallari haqida\n• O'qituvchilar haqida\n• Maktab xonalari joylashuvi\n• Kutubxona va kitoblar\n• Qo'shimcha tadbirlar",
-    links: []
-  }
-}
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
   const [messages, setMessages] = useState([
-    { 
-      role: 'assistant', 
-      content: "Salom! Men Smart School AI yordamchisiman. Sizga qanday yordam berishim mumkin?" 
-    }
+    {
+      role: 'assistant',
+      content: "Salom! Men Smart AI yordamchisiman. Platformadagi jadval, hodimlar, yangiliklar, yutuqlar, kutubxona va faoliyatlar bo'yicha savollaringizga javob beraman.",
+    },
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const messagesEnd = useRef(null)
-
-  const scrollToBottom = () => {
-    messagesEnd.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  useBodyScrollLock(isOpen)
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    messagesEnd.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
 
-  const getResponse = (query) => {
-    const lowerQuery = query.toLowerCase()
-    
-    if (lowerQuery.includes('9-a') || lowerQuery.includes('9a')) {
-      return responses['9-a']
-    }
-    if (lowerQuery.includes('fizika')) {
-      return responses['fizika']
-    }
-    if (lowerQuery.includes('direktor') || lowerQuery.includes('rahbar')) {
-      return responses['direktor']
-    }
-    if (lowerQuery.includes('kutubxona') || lowerQuery.includes('kitob')) {
-      return responses['kutubxona']
-    }
-    
-    return responses.default
-  }
+  async function askAI(text) {
+    const question = text.trim()
+    if (!question || isTyping) return
 
-  const handleSend = () => {
-    if (!input.trim()) return
-
-    const userMessage = { role: 'user', content: input }
-    setMessages(prev => [...prev, userMessage])
+    setMessages((current) => [...current, { role: 'user', content: question }])
     setInput('')
     setIsTyping(true)
 
-    setTimeout(() => {
-      const response = getResponse(input)
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: response.answer,
-        links: response.links
-      }])
+    try {
+      const response = await fetch('/api/smart-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      })
+      const data = await response.json()
+      setMessages((current) => [...current, { role: 'assistant', content: data.answer || "Javob topilmadi." }])
+    } catch {
+      setMessages((current) => [...current, { role: 'assistant', content: "Hozircha AI bilan bog'lanishda muammo bor. Keyinroq qayta urinib ko'ring." }])
+    } finally {
       setIsTyping(false)
-    }, 1000)
-  }
-
-  const handleSuggestion = (suggestion) => {
-    setInput(suggestion)
-    handleSend()
+    }
   }
 
   return (
@@ -107,151 +59,102 @@ export default function AIAssistant() {
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.94 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gradient-to-r from-primary to-accent-purple text-white shadow-lg shadow-primary/30 flex items-center justify-center z-50"
+        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-primary to-accent-purple text-white shadow-xl shadow-primary/30"
+        aria-label="Smart AI"
       >
-        <MessageSquare className="w-7 h-7" />
-        <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full animate-pulse" />
+        <MessageSquare className="h-6 w-6" />
+        <span className="absolute -right-0.5 -top-0.5 h-4 w-4 rounded-full border-2 border-white bg-emerald-500" />
       </motion.button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
-              scale: 1,
-              height: isMinimized ? 'auto' : '600px'
-            }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className={`fixed bottom-6 right-6 w-96 bg-white dark:bg-dark-100 rounded-3xl shadow-2xl z-50 overflow-hidden border border-gray-200 dark:border-gray-700 ${
-              isMinimized ? 'h-auto' : 'h-[600px]'
-            }`}
+            className="fixed inset-0 z-[70] flex items-end justify-end bg-black/35 p-3 backdrop-blur-sm sm:p-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
           >
-            <div className="bg-gradient-to-r from-primary to-accent-purple p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
+            <motion.section
+              initial={{ opacity: 0, y: 30, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.96 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex h-[min(720px,calc(100vh-24px))] w-full max-w-[440px] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-dark-50"
+            >
+              <header className="flex items-center justify-between bg-gradient-to-r from-primary to-accent-purple p-4 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Smart AI</h3>
+                    <p className="text-xs text-white/80">Platforma ma'lumotlari asosida</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-white">Smart AI</h3>
-                  <p className="text-xs text-white/80">Online yordamchi</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-                >
-                  {isMinimized ? <Maximize2 className="w-4 h-4 text-white" /> : <Minimize2 className="w-4 h-4 text-white" />}
+                <button onClick={() => setIsOpen(false)} className="rounded-xl p-2 hover:bg-white/20" aria-label="Yopish">
+                  <X className="h-5 w-5" />
                 </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-                >
-                  <X className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            </div>
+              </header>
 
-            {!isMinimized && (
-              <>
-                <div className="p-4 h-[400px] overflow-y-auto space-y-4">
-                  {messages.map((msg, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {msg.role === 'assistant' && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent-purple flex items-center justify-center flex-shrink-0">
-                          <Bot className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <div className={`max-w-[80%] p-3 rounded-2xl ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-white rounded-br-md'
-                          : 'bg-gray-100 dark:bg-dark-50 rounded-bl-md'
-                      }`}>
-                        <p className="text-sm whitespace-pre-line">{msg.content}</p>
-                        {msg.links && msg.links.length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            {msg.links.map((link, i) => (
-                              <a
-                                key={i}
-                                href={link.href}
-                                className="block text-xs text-primary hover:underline"
-                              >
-                                → {link.text}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {msg.role === 'user' && (
-                        <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                          <User className="w-4 h-4" />
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                  {isTyping && (
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent-purple flex items-center justify-center">
-                        <Bot className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="bg-gray-100 dark:bg-dark-50 p-3 rounded-2xl rounded-bl-md">
-                        <div className="flex gap-1">
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
-                      </div>
+              <div className="flex-1 space-y-4 overflow-y-auto bg-gray-50 p-4 dark:bg-dark-100">
+                {messages.map((message, index) => (
+                  <div key={`${message.role}-${index}`} className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {message.role === 'assistant' && <Avatar icon={Bot} />}
+                    <div className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === 'user' ? 'rounded-br-md bg-primary text-white' : 'rounded-bl-md bg-white text-gray-800 shadow-sm dark:bg-dark-50 dark:text-gray-100'}`}>
+                      <p className="whitespace-pre-line">{message.content}</p>
                     </div>
-                  )}
-                  <div ref={messagesEnd} />
-                </div>
-
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {suggestions.slice(0, 4).map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestion(suggestion)}
-                        className="px-3 py-1.5 rounded-full text-xs bg-gray-100 dark:bg-dark-50 hover:bg-primary/10 hover:text-primary transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                    {message.role === 'user' && <Avatar icon={User} muted />}
                   </div>
+                ))}
+                {isTyping && (
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder="Savol yozing..."
-                      className="flex-1 px-4 py-3 rounded-2xl glass border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-                    />
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleSend}
-                      className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-accent-purple text-white flex items-center justify-center"
-                    >
-                      <Send className="w-5 h-5" />
-                    </motion.button>
+                    <Avatar icon={Bot} />
+                    <div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-white px-4 py-3 text-sm shadow-sm dark:bg-dark-50">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      Javob tayyorlanmoqda...
+                    </div>
                   </div>
+                )}
+                <div ref={messagesEnd} />
+              </div>
+
+              <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-dark-50">
+                <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                  {suggestions.map((suggestion) => (
+                    <button key={suggestion} onClick={() => askAI(suggestion)} className="whitespace-nowrap rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">
+                      {suggestion}
+                    </button>
+                  ))}
                 </div>
-              </>
-            )}
+                <div className="flex gap-2">
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && askAI(input)}
+                    placeholder="Savol yozing..."
+                    className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-100"
+                  />
+                  <button disabled={!input.trim() || isTyping} onClick={() => askAI(input)} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-accent-purple text-white disabled:opacity-50">
+                    <Send className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </motion.section>
           </motion.div>
         )}
       </AnimatePresence>
     </>
+  )
+}
+
+function Avatar({ icon: Icon, muted = false }) {
+  return (
+    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${muted ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200' : 'bg-gradient-to-r from-primary to-accent-purple text-white'}`}>
+      <Icon className="h-4 w-4" />
+    </div>
   )
 }

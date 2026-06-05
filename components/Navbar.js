@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Moon, Sun, GraduationCap, BookOpen, Calendar, Award, Users, Clock, Map, Library, MessageSquare, Bell, ChevronDown, User, Building2 } from 'lucide-react'
+import { Menu, X, Moon, Sun, GraduationCap, BookOpen, Calendar, Award, Users, Clock, Map, Library, Bell, ChevronDown, User, Building2 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
+import { createClient } from '@/lib/supabase'
 
 const mainNavItems = [
   { name: 'Bosh Sahifa', href: '/', icon: GraduationCap },
@@ -29,7 +30,11 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [oquvchiOpen, setOquvchiOpen] = useState(false)
   const [maktabOpen, setMaktabOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [readIds, setReadIds] = useState([])
   const { theme, toggleTheme } = useTheme()
+  const supabase = createClient()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,6 +43,40 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('webschool_read_notifications') || '[]')
+    setReadIds(stored)
+
+    async function loadNotifications() {
+      const { data } = await supabase
+        .from('news')
+        .select('id,title,category,published_at,event_start_at')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(30)
+
+      setNotifications((data || []).filter(shouldNotify).map((item) => ({
+        ...item,
+        href: '/news',
+        message: item.category === 'tadbir'
+          ? eventMessage(item)
+          : "Yangi yangilik qo'shildi",
+      })))
+    }
+
+    loadNotifications()
+  }, [])
+
+  const unreadCount = notifications.filter((item) => !readIds.includes(item.id)).length
+
+  function openNotifications() {
+    setNotificationsOpen((value) => !value)
+    const ids = notifications.map((item) => item.id)
+    const nextRead = Array.from(new Set([...readIds, ...ids]))
+    setReadIds(nextRead)
+    localStorage.setItem('webschool_read_notifications', JSON.stringify(nextRead))
+  }
 
   return (
     <>
@@ -132,14 +171,43 @@ export default function Navbar() {
                 )}
               </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors relative"
-              >
-                <Bell className="w-5 h-5 text-primary" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </motion.button>
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={openNotifications}
+                  className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors relative"
+                  aria-label="Xabarnomalar"
+                >
+                  <Bell className="w-5 h-5 text-primary" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </motion.button>
+                <AnimatePresence>
+                  {notificationsOpen && (
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="absolute right-0 top-full mt-3 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-dark-50">
+                      <div className="border-b border-gray-200 p-4 dark:border-gray-700">
+                        <p className="font-bold">Xabarnomalar</p>
+                        <p className="text-xs text-gray-500">Yangilik va tadbir eslatmalari</p>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto p-2">
+                        {notifications.length === 0 ? (
+                          <p className="p-4 text-sm text-gray-500">Hozircha yangi xabarnoma yo'q.</p>
+                        ) : notifications.map((item) => (
+                          <Link key={item.id} href={item.href} onClick={() => setNotificationsOpen(false)} className="block rounded-xl p-3 hover:bg-primary/10">
+                            <p className="text-sm font-semibold line-clamp-2">{item.title}</p>
+                            <p className="mt-1 text-xs text-primary">{item.message}</p>
+                            <p className="mt-1 text-xs text-gray-500">{formatNotifyDate(item.event_start_at || item.published_at)}</p>
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -251,4 +319,34 @@ export default function Navbar() {
       </AnimatePresence>
     </>
   )
+}
+
+function shouldNotify(item) {
+  const now = new Date()
+  const dayMs = 24 * 60 * 60 * 1000
+
+  if (item.category === 'tadbir' && item.event_start_at) {
+    const eventDate = new Date(item.event_start_at)
+    const startWindow = new Date(eventDate.getTime() - 3 * dayMs)
+    const endWindow = new Date(eventDate.getTime() + dayMs)
+    return now >= startWindow && now < endWindow
+  }
+
+  const published = item.published_at ? new Date(item.published_at) : null
+  if (!published) return false
+  return now.getTime() - published.getTime() <= 3 * dayMs
+}
+
+function eventMessage(item) {
+  if (!item.event_start_at) return 'Yangi tadbir yangiligi'
+  const eventDate = new Date(item.event_start_at)
+  const now = new Date()
+  const sameDay = eventDate.toDateString() === now.toDateString()
+  if (sameDay) return 'Tadbir bugun bo\'lib o\'tadi'
+  return 'Rejalashtirilgan tadbir eslatmasi'
+}
+
+function formatNotifyDate(value) {
+  if (!value) return ''
+  return new Date(value).toLocaleString('uz-UZ', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }

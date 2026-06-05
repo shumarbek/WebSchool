@@ -37,3 +37,15 @@ CREATE TABLE IF NOT EXISTS site_visits (
 CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON site_visits(visited_at DESC);
 
 ALTER TABLE site_visits DISABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS ai_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  api_key TEXT,
+  model TEXT DEFAULT 'gemini-1.5-flash',
+  platform_context TEXT,
+  is_enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE ai_settings DISABLE ROW LEVEL SECURITY;

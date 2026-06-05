@@ -109,6 +109,13 @@ export default function Footer() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-400 text-sm">© 2026 DOSOV. Barcha huquqlar himoyalangan.</p>
+          <p className="text-sm text-gray-400">
+            Platforma{' '}
+            <a href="https://shumarbek.netlify.app" target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+              ShUmarbek
+            </a>{' '}
+            tomonidan ishlab chiqilgan
+          </p>
         </motion.div>
       </div>
     </footer>

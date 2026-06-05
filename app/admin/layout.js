@@ -20,6 +20,7 @@ import {
   Users,
   ChevronsLeft,
   ChevronsRight,
+  Bot,
 } from 'lucide-react'
 
 const menuItems = [
@@ -32,6 +33,7 @@ const menuItems = [
   { name: 'Kutubxona', href: '/admin/library', icon: BookOpen },
   { name: 'Tarix', href: '/admin/history', icon: History },
   { name: 'Sozlamalar', href: '/admin/settings', icon: Settings },
+  { name: 'Smart AI', href: '/admin/ai', icon: Bot },
   { name: 'Statistika', href: '/admin/stats', icon: Activity },
 ]
 
