@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
 import StaffProfileModal from '@/components/StaffProfileModal'
+import useBodyScrollLock from '@/hooks/useBodyScrollLock'
 
 const categoryLabels = {
   olimpiada: 'Olimpiada',
@@ -33,6 +34,7 @@ export default function Achievements() {
   const [staff, setStaff] = useState([])
   const [selectedStaff, setSelectedStaff] = useState(null)
   const supabase = createClient()
+  useBodyScrollLock(!!selected || !!media || !!selectedStaff)
 
   useEffect(() => {
     async function loadAchievements() {

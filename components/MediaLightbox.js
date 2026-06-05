@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import useBodyScrollLock from '@/hooks/useBodyScrollLock'
 
 function getVideoSource(url) {
   if (!url) return null
@@ -33,6 +34,7 @@ function getVideoSource(url) {
 }
 
 export default function MediaLightbox({ media, onClose }) {
+  useBodyScrollLock(!!media)
   const video = media?.type === 'video' ? getVideoSource(media.src) : null
 
   return (

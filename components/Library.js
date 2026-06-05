@@ -6,6 +6,7 @@ import { BookOpen, ExternalLink, Grid, List, Search, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
+import useBodyScrollLock from '@/hooks/useBodyScrollLock'
 
 const categoryLabels = {
   darslik: 'Darslik',
@@ -21,6 +22,7 @@ export default function Library() {
   const [selected, setSelected] = useState(null)
   const [media, setMedia] = useState(null)
   const supabase = createClient()
+  useBodyScrollLock(!!selected || !!media)
 
   useEffect(() => {
     async function loadBooks() {
@@ -109,7 +111,7 @@ export default function Library() {
         {selected && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)}>
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="grid max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50 md:grid-cols-[260px_1fr]">
-              <div className="bg-amber-500/10 p-6">
+              <div className="bg-amber-500/10 p-6 md:sticky md:top-0 md:self-start">
                 <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-white/50">
                   {selected.cover_url ? <button type="button" onClick={() => setMedia({ type: 'image', src: selected.cover_url, alt: selected.title })} className="h-full w-full"><img src={selected.cover_url} alt={selected.title} className="h-full w-full object-cover" /></button> : <div className="flex h-full items-center justify-center"><BookOpen className="h-14 w-14 text-amber-500/50" /></div>}
                 </div>

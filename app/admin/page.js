@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase'
 import { 
   Users, Calendar, Award, BookOpen, Clock, FileText, 
-  TrendingUp, History
+  TrendingUp, History, BarChart3
 } from 'lucide-react'
 
 const statsCards = [
@@ -20,6 +20,7 @@ const statsCards = [
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({})
+  const [visits, setVisits] = useState({ total: 0, days: [] })
   const [recentNews, setRecentNews] = useState([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -30,18 +31,24 @@ export default function AdminDashboard() {
 
   async function loadStats() {
     try {
-      const [staffRes, newsRes, achievementsRes, activitiesRes, libraryRes, scheduleRes, historyRes] = await Promise.all([
-        supabase.from('staff').select('*', { count: 'exact', head: true }),
+      const [staffRes, newsRes, achievementsRes, activitiesRes, libraryRes, scheduleRes, historyRes, visitsRes] = await Promise.all([
+        supabase.from('staff').select('role, service_count'),
         supabase.from('news').select('*', { count: 'exact', head: true }),
         supabase.from('achievements').select('*', { count: 'exact', head: true }),
         supabase.from('activities').select('*', { count: 'exact', head: true }),
         supabase.from('library_books').select('*', { count: 'exact', head: true }),
         supabase.from('schedule').select('*', { count: 'exact', head: true }),
         supabase.from('milestones').select('*', { count: 'exact', head: true }),
+        supabase.from('site_visits').select('visited_at').gte('visited_at', last30DaysDate()),
       ])
 
+      const staffCount = (staffRes.data || []).reduce((total, item) => {
+        if (item.role === 'xizmat') return total + (Number(item.service_count) || 0)
+        return total + 1
+      }, 0)
+
       setStats({
-        staff: staffRes.count || 0,
+        staff: staffCount,
         news: newsRes.count || 0,
         achievements: achievementsRes.count || 0,
         activities: activitiesRes.count || 0,
@@ -49,6 +56,7 @@ export default function AdminDashboard() {
         schedule: scheduleRes.count || 0,
         history: historyRes.count || 0,
       })
+      setVisits(buildVisitStats(visitsRes.error ? [] : visitsRes.data || []))
 
       const { data: newsData } = await supabase
         .from('news')
@@ -148,9 +156,55 @@ export default function AdminDashboard() {
                 {Object.values(stats).reduce((a, b) => a + b, 0)}
               </span>
             </div>
+            <div className="rounded-xl bg-purple-500/10 p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-4 w-4 text-purple-500" />
+                  <span className="font-medium">30 kunlik tashrif</span>
+                </div>
+                <span className="text-sm font-bold gradient-text">{visits.total}</span>
+              </div>
+              <div className="flex h-14 items-end gap-1">
+                {visits.days.map((day) => (
+                  <div key={day.date} className="flex flex-1 items-end">
+                    <div className="w-full rounded-t bg-purple-500/70" style={{ height: `${Math.max(8, day.percent)}%` }} title={`${day.date}: ${day.count}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
     </div>
   )
+}
+
+function last30DaysDate() {
+  const date = new Date()
+  date.setDate(date.getDate() - 29)
+  date.setHours(0, 0, 0, 0)
+  return date.toISOString()
+}
+
+function buildVisitStats(rows) {
+  const dates = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (29 - index))
+    return date.toISOString().slice(0, 10)
+  })
+  const counts = Object.fromEntries(dates.map((date) => [date, 0]))
+
+  rows.forEach((row) => {
+    const date = row.visited_at?.slice(0, 10)
+    if (date && counts[date] !== undefined) counts[date] += 1
+  })
+
+  const max = Math.max(1, ...Object.values(counts))
+  const days = dates.map((date) => ({
+    date,
+    count: counts[date],
+    percent: (counts[date] / max) * 100,
+  }))
+
+  return { total: rows.length, days }
 }

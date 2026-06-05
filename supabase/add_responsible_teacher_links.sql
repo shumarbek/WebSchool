@@ -26,3 +26,14 @@ ALTER TABLE milestones
 ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}';
 
 CREATE INDEX IF NOT EXISTS idx_milestones_date ON milestones(year, month);
+
+CREATE TABLE IF NOT EXISTS site_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  path TEXT,
+  user_agent TEXT,
+  visited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON site_visits(visited_at DESC);
+
+ALTER TABLE site_visits DISABLE ROW LEVEL SECURITY;

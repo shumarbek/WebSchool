@@ -40,6 +40,13 @@ CREATE TABLE IF NOT EXISTS platform_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS site_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  path TEXT,
+  user_agent TEXT,
+  visited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS stats_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   students_count INTEGER DEFAULT 0,
@@ -186,12 +193,14 @@ CREATE INDEX IF NOT EXISTS idx_activities_published_date ON activities(is_publis
 CREATE INDEX IF NOT EXISTS idx_library_published_title ON library_books(is_published, title);
 CREATE INDEX IF NOT EXISTS idx_schedule_lookup ON schedule(is_active, grade, tur, day, lesson_number);
 CREATE INDEX IF NOT EXISTS idx_milestones_date ON milestones(year, month);
+CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON site_visits(visited_at DESC);
 
 -- The current app uses a custom admin login table and the anon key from the browser.
 -- RLS is disabled so admin CRUD works after a fresh setup.
 ALTER TABLE admin_users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE site_visits DISABLE ROW LEVEL SECURITY;
 ALTER TABLE stats_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE staff DISABLE ROW LEVEL SECURITY;
 ALTER TABLE milestones DISABLE ROW LEVEL SECURITY;

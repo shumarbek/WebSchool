@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import EmptyState from '@/components/EmptyState'
 import MediaLightbox from '@/components/MediaLightbox'
+import useBodyScrollLock from '@/hooks/useBodyScrollLock'
 
 const roleLabels = {
   mamuriyat: "Ma'muriyat",
@@ -37,6 +38,7 @@ export default function Staff({ featuredOnly = false }) {
   const [media, setMedia] = useState(null)
   const [counts, setCounts] = useState({ teachers: 0, staff: 0 })
   const supabase = createClient()
+  useBodyScrollLock(!!selected || !!media)
 
   useEffect(() => {
     async function loadStaff() {
@@ -152,14 +154,14 @@ export default function Staff({ featuredOnly = false }) {
         {selected && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)}>
             <motion.article initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl dark:bg-dark-50 md:grid-cols-[280px_1fr]">
-              <div className="bg-primary/10 p-6">
+              <div className="bg-primary/10 p-6 md:sticky md:top-0 md:self-start">
                 <button onClick={() => setSelected(null)} className="mb-4 ml-auto flex rounded-full bg-black/50 p-2 text-white md:hidden"><X className="h-5 w-5" /></button>
                 <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-white/40">
                   {selected.photo_url ? <button type="button" onClick={() => setMedia({ type: 'image', src: selected.photo_url, alt: selected.full_name })} className="h-full w-full"><img src={selected.photo_url} alt={selected.full_name} className="h-full w-full object-cover" /></button> : <div className="flex h-full items-center justify-center"><UserRound className="h-16 w-16 text-primary/35" /></div>}
                 </div>
                 <div className="mt-5 space-y-3 text-sm">
-                  {selected.phone && <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" />{selected.phone}</p>}
-                  {selected.email && <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" />{selected.email}</p>}
+                  {selected.phone && <a href={`tel:${selected.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-primary"><Phone className="h-4 w-4 text-primary" />{selected.phone}</a>}
+                  {selected.email && <a href={`mailto:${selected.email}`} className="flex items-center gap-2 hover:text-primary"><Mail className="h-4 w-4 text-primary" />{selected.email}</a>}
                 </div>
               </div>
               <div className="relative p-6 md:p-8">

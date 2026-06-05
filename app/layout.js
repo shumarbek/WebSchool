@@ -1,5 +1,6 @@
 import './globals.css'
 import ThemeProvider from '@/components/ThemeProvider'
+import VisitTracker from '@/components/VisitTracker'
 
 export const metadata = {
   title: 'Smart School - Zamonaviy Ta\'lim Platformasi',
@@ -12,6 +13,7 @@ export default function RootLayout({ children }) {
     <html lang="uz" suppressHydrationWarning>
       <body>
         <ThemeProvider>
+          <VisitTracker />
           {children}
         </ThemeProvider>
       </body>
