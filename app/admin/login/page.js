@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, Mail, Eye, EyeOff, GraduationCap, AlertCircle } from 'lucide-react'
+import { useAdminAuth } from '@/context/AdminAuthContext'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -10,19 +11,20 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [supabaseError, setSupabaseError] = useState(null)
+  const { login } = useAdminAuth()
   
   useEffect(() => {
-    const storedAdmin = localStorage.getItem('dosov_admin')
-    if (storedAdmin) {
-      window.location.href = '/admin'
+    async function checkSession() {
+      const response = await fetch('/api/admin/me', { cache: 'no-store' })
+      if (response.ok) window.location.href = '/admin'
     }
+
+    checkSession()
   }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    setSupabaseError(null)
     setLoading(true)
 
     if (!email || !password) {
@@ -31,47 +33,8 @@ export default function AdminLoginPage() {
       return
     }
 
-    try {
-      const { createClient } = await import('@supabase/supabase-js')
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      
-      if (!supabaseUrl || !supabaseKey) {
-        setSupabaseError('Supabase konfiguratsiyasi topilmadi. Iltimos .env.local faylini tekshiring.')
-        setLoading(false)
-        return
-      }
-      
-      const supabase = createClient(supabaseUrl, supabaseKey)
-      
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .eq('password_hash', password)
-        .single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          setError('Login yoki parol xato')
-        } else {
-          setSupabaseError(`Supabase xatosi: ${error.message}`)
-        }
-        setLoading(false)
-        return
-      }
-
-      if (data) {
-        localStorage.setItem('dosov_admin', JSON.stringify(data))
-        window.location.href = '/admin'
-      } else {
-        setError('Login yoki parol xato')
-      }
-    } catch (err) {
-      console.error('Login error:', err)
-      setSupabaseError(`Xatolik: ${err.message}`)
-    }
-    
+    const result = await login(email, password)
+    if (!result.success) setError(result.error || 'Login yoki parol xato')
     setLoading(false)
   }
 
@@ -97,14 +60,9 @@ export default function AdminLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {supabaseError && (
+            {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {supabaseError}
-              </div>
-            )}
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
                 {error}
               </div>
             )}
@@ -120,7 +78,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-100 dark:bg-dark-50 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="admin@dosov.uz"
+                  placeholder="admin@example.com"
                 />
               </div>
             </div>

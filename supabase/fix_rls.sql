@@ -12,11 +12,3 @@ ALTER TABLE achievements DISABLE ROW LEVEL SECURITY;
 ALTER TABLE activities DISABLE ROW LEVEL SECURITY;
 ALTER TABLE library_books DISABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule DISABLE ROW LEVEL SECURITY;
-
-INSERT INTO admin_users (email, password_hash, full_name, role)
-VALUES ('admin@dosov.uz', 'admin123', 'Admin', 'admin')
-ON CONFLICT (email) DO UPDATE SET
-  password_hash = EXCLUDED.password_hash,
-  full_name = EXCLUDED.full_name,
-  role = 'admin',
-  updated_at = NOW();

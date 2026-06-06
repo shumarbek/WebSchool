@@ -7,17 +7,16 @@
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=strong-password
+ADMIN_FULL_NAME=Admin
+ADMIN_SESSION_SECRET=long-random-secret
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
 4. Start the app and login at `/admin/login`.
 
-Default admin:
-
-```text
-Email: admin@dosov.uz
-Password: admin123
-Role: admin
-```
+Admin login and password are read from server-only `.env.local` variables. Never prefix admin credentials or Gemini API key with `NEXT_PUBLIC`.
 
 Notes:
 

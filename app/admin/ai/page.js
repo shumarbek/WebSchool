@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, KeyRound, Save, Sparkles } from 'lucide-react'
+import { KeyRound, Save, Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.5-flash']
@@ -13,7 +13,6 @@ export default function AdminAIPage() {
   const [success, setSuccess] = useState(false)
   const [settingsId, setSettingsId] = useState(null)
   const [formData, setFormData] = useState({
-    api_key: '',
     model: 'gemini-1.5-flash',
     platform_context: '',
     is_enabled: true,
@@ -26,7 +25,6 @@ export default function AdminAIPage() {
       if (!error && data) {
         setSettingsId(data.id)
         setFormData({
-          api_key: data.api_key || '',
           model: data.model || 'gemini-1.5-flash',
           platform_context: data.platform_context || '',
           is_enabled: data.is_enabled ?? true,
@@ -82,13 +80,9 @@ export default function AdminAIPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">API key</span>
-              <input
-                type="password"
-                value={formData.api_key}
-                onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-                className="w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 outline-none focus:border-primary dark:border-gray-700 dark:bg-dark-50"
-                placeholder="AIza..."
-              />
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                API key serverdagi <code>GEMINI_API_KEY</code> env orqali olinadi.
+              </div>
             </label>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">Model</span>

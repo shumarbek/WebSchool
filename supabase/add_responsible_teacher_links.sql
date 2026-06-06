@@ -40,7 +40,6 @@ ALTER TABLE site_visits DISABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS ai_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  api_key TEXT,
   model TEXT DEFAULT 'gemini-1.5-flash',
   platform_context TEXT,
   is_enabled BOOLEAN DEFAULT true,
@@ -48,4 +47,9 @@ CREATE TABLE IF NOT EXISTS ai_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE ai_settings
+DROP COLUMN IF EXISTS api_key;
+
 ALTER TABLE ai_settings DISABLE ROW LEVEL SECURITY;
+
+DELETE FROM admin_users;

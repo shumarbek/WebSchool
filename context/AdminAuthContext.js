@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const AdminAuthContext = createContext()
@@ -10,7 +9,6 @@ export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
     checkAdmin()
@@ -18,11 +16,10 @@ export function AdminAuthProvider({ children }) {
 
   async function checkAdmin() {
     try {
-      const storedAdmin = localStorage.getItem('dosov_admin')
-      if (storedAdmin) {
-        const adminData = JSON.parse(storedAdmin)
-        setAdmin(adminData)
-      }
+      const response = await fetch('/api/admin/me', { cache: 'no-store' })
+      if (!response.ok) return
+      const data = await response.json()
+      setAdmin(data.admin || null)
     } catch (error) {
       console.error('Error checking admin:', error)
     } finally {
@@ -32,31 +29,25 @@ export function AdminAuthProvider({ children }) {
 
   async function login(email, password) {
     try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .eq('password_hash', password)
-        .single()
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await response.json()
+      if (!response.ok) return { success: false, error: data.error || 'Login yoki parol xato' }
 
-      if (error) throw error
-
-      if (data) {
-        localStorage.setItem('dosov_admin', JSON.stringify(data))
-        setAdmin(data)
-        router.push('/admin')
-        return { success: true }
-      } else {
-        return { success: false, error: 'Login yoki parol xato' }
-      }
+      setAdmin(data.admin)
+      router.push('/admin')
+      return { success: true }
     } catch (error) {
       console.error('Login error:', error)
       return { success: false, error: 'Xatolik yuz berdi' }
     }
   }
 
-  function logout() {
-    localStorage.removeItem('dosov_admin')
+  async function logout() {
+    await fetch('/api/admin/logout', { method: 'POST' })
     setAdmin(null)
     router.push('/admin/login')
   }

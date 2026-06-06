@@ -21,7 +21,8 @@ export async function POST(request) {
     const { data: aiSettings } = await supabase.from('ai_settings').select('*').limit(1).maybeSingle()
     const context = await buildPlatformContext(supabase, aiSettings?.platform_context)
 
-    if (!aiSettings?.is_enabled || !aiSettings?.api_key) {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!aiSettings?.is_enabled || !apiKey) {
       return NextResponse.json({ answer: localAnswer(question, context) })
     }
 
@@ -38,7 +39,7 @@ export async function POST(request) {
     ].join('\n')
 
     const model = aiSettings.model || 'gemini-1.5-flash'
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(aiSettings.api_key)}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

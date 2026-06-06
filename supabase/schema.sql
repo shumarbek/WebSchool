@@ -49,7 +49,6 @@ CREATE TABLE IF NOT EXISTS site_visits (
 
 CREATE TABLE IF NOT EXISTS ai_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  api_key TEXT,
   model TEXT DEFAULT 'gemini-1.5-flash',
   platform_context TEXT,
   is_enabled BOOLEAN DEFAULT true,
@@ -205,8 +204,8 @@ CREATE INDEX IF NOT EXISTS idx_schedule_lookup ON schedule(is_active, grade, tur
 CREATE INDEX IF NOT EXISTS idx_milestones_date ON milestones(year, month);
 CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON site_visits(visited_at DESC);
 
--- The current app uses a custom admin login table and the anon key from the browser.
--- RLS is disabled so admin CRUD works after a fresh setup.
+-- Public content tables are browser-managed through Supabase anon key in this project.
+-- Admin login credentials are server-only env variables, not database seed data.
 ALTER TABLE admin_users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings DISABLE ROW LEVEL SECURITY;
@@ -221,16 +220,7 @@ ALTER TABLE activities DISABLE ROW LEVEL SECURITY;
 ALTER TABLE library_books DISABLE ROW LEVEL SECURITY;
 ALTER TABLE schedule DISABLE ROW LEVEL SECURITY;
 
--- Initial records: only the admin account plus empty settings rows.
--- No sample content is inserted into public content tables.
-INSERT INTO admin_users (email, password_hash, full_name, role)
-VALUES ('admin@dosov.uz', 'admin123', 'Admin', 'admin')
-ON CONFLICT (email) DO UPDATE SET
-  password_hash = EXCLUDED.password_hash,
-  full_name = EXCLUDED.full_name,
-  role = 'admin',
-  updated_at = NOW();
-
+-- Initial records: only empty settings rows. No sample content is inserted.
 INSERT INTO hero_settings (title, subtitle, cta_text, cta_link, is_active)
 SELECT 'DOSOV Maktabi', 'Zamonaviy ta''lim va ochiq boshqaruv platformasi', 'Yangiliklar', '#news', true
 WHERE NOT EXISTS (SELECT 1 FROM hero_settings);
