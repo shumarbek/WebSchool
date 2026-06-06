@@ -1,8 +1,10 @@
 {
-  "/api/admin/me/route": "app/api/admin/me/route.js",
-  "/api/admin/login/route": "app/api/admin/login/route.js",
-  "/api/admin/logout/route": "app/api/admin/logout/route.js",
   "/page": "app/page.js",
+  "/achievements/page": "app/achievements/page.js",
+  "/activities/page": "app/activities/page.js",
+  "/schedule/page": "app/schedule/page.js",
+  "/history/page": "app/history/page.js",
+  "/admin/ai/page": "app/admin/ai/page.js",
   "/admin/page": "app/admin/page.js",
   "/admin/login/page": "app/admin/login/page.js"
 }
